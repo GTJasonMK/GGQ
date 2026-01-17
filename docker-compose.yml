@@ -8,8 +8,7 @@ services:
       dockerfile: Dockerfile
     container_name: ggm
     restart: unless-stopped
-    ports:
-      - "${GGM_PORT:-8000}:8000"
+    network_mode: "host"
     volumes:
       # 持久化数据
       - ggm_data:/app/GGM/data
@@ -20,12 +19,8 @@ services:
       - ./backend/GGM/credient.txt:/app/GGM/credient.txt
     environment:
       - TZ=Asia/Shanghai
-      - GEMINI_PROXY=socks5h://host.docker.internal:1080
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - GEMINI_PROXY=socks5h://127.0.0.1:1080
     command: python -u GGM/run.py
-    networks:
-      - webdev-network
     # 2G 服务器内存限制（需要运行 Playwright 浏览器，增加内存）
     deploy:
       resources:
@@ -46,8 +41,7 @@ services:
       dockerfile: Dockerfile
     container_name: auth
     restart: unless-stopped
-    ports:
-      - "${AUTH_PORT:-8001}:8001"
+    network_mode: "host"
     volumes:
       # 持久化数据库
       - auth_data:/app/auth/data
@@ -56,8 +50,6 @@ services:
     environment:
       - TZ=Asia/Shanghai
     command: python -u auth/run.py
-    networks:
-      - webdev-network
     deploy:
       resources:
         limits:
@@ -77,8 +69,7 @@ services:
       dockerfile: Dockerfile
     container_name: monitor
     restart: unless-stopped
-    ports:
-      - "${MONITOR_PORT:-3001}:3001"
+    network_mode: "host"
     volumes:
       # 持久化数据
       - monitor_data:/app/monitoringDashboard/data
@@ -87,8 +78,6 @@ services:
     environment:
       - TZ=Asia/Shanghai
     command: python -u monitoringDashboard/run.py
-    networks:
-      - webdev-network
     deploy:
       resources:
         limits:
@@ -101,8 +90,7 @@ services:
     image: nginx:alpine
     container_name: frontend
     restart: unless-stopped
-    ports:
-      - "${FRONTEND_PORT:-80}:80"
+    network_mode: "host"
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
@@ -110,18 +98,12 @@ services:
       - ggm
       - auth
       - monitor
-    networks:
-      - webdev-network
     deploy:
       resources:
         limits:
           memory: 64M
         reservations:
           memory: 16M
-
-networks:
-  webdev-network:
-    driver: bridge
 
 volumes:
   ggm_data:

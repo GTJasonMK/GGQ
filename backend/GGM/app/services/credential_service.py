@@ -342,8 +342,11 @@ class CredentialRefreshService:
                 # 如果配置了代理，添加到启动参数
                 proxy_url = self._config_dict.get("proxy")
                 if proxy_url:
-                    launch_options["proxy"] = {"server": proxy_url}
-                    print(f"[Credential Service] Using proxy for browser: {proxy_url}")
+                    # Chromium 不支持 socks5h:// 协议头，需要替换为 socks5://
+                    # 但 socks5:// 在 Chromium 中默认就是远程 DNS 解析
+                    browser_proxy_url = proxy_url.replace("socks5h://", "socks5://")
+                    launch_options["proxy"] = {"server": browser_proxy_url}
+                    print(f"[Credential Service] Using proxy for browser: {browser_proxy_url}")
                 
                 self._browser = await self._playwright.chromium.launch(**launch_options)
 

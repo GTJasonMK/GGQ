@@ -647,8 +647,10 @@ class ConcurrentAutoLoginService:
         # 如果配置了代理，添加到启动参数
         proxy_url = self.config.get("proxy")
         if proxy_url:
-            launch_options["proxy"] = {"server": proxy_url}
-            print(f"  [并发服务] 使用代理: {proxy_url}")
+            # Chromium 不支持 socks5h:// 协议头，替换为 socks5://
+            browser_proxy_url = proxy_url.replace("socks5h://", "socks5://")
+            launch_options["proxy"] = {"server": browser_proxy_url}
+            print(f"  [并发服务] 使用代理: {browser_proxy_url}")
             
         self._browser = await self._playwright.chromium.launch(**launch_options)
 

@@ -1294,10 +1294,18 @@ class AutoLoginService:
                     "--window-size=1920,1080",
                 ]
 
-                self._browser = await self._playwright.chromium.launch(
-                    headless=self.headless,
-                    args=launch_args
-                )
+                launch_options = {
+                    "headless": self.headless,
+                    "args": launch_args
+                }
+
+                # 如果配置了代理，添加到启动参数
+                proxy_url = self.config.get("proxy")
+                if proxy_url:
+                    launch_options["proxy"] = {"server": proxy_url}
+                    print(f"  [浏览器] 使用代理: {proxy_url}")
+
+                self._browser = await self._playwright.chromium.launch(**launch_options)
 
                 print(f"  [浏览器] 浏览器启动成功 (反检测模式)!")
 

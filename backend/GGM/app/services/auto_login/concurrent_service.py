@@ -633,15 +633,24 @@ class ConcurrentAutoLoginService:
         from playwright.async_api import async_playwright
 
         self._playwright = await async_playwright().start()
-        self._browser = await self._playwright.chromium.launch(
-            headless=self.headless,
-            args=[
+        
+        launch_options = {
+            "headless": self.headless,
+            "args": [
                 "--disable-blink-features=AutomationControlled",
                 "--disable-dev-shm-usage",
                 "--no-first-run",
                 "--disable-infobars",
             ]
-        )
+        }
+        
+        # 如果配置了代理，添加到启动参数
+        proxy_url = self.config.get("proxy")
+        if proxy_url:
+            launch_options["proxy"] = {"server": proxy_url}
+            print(f"  [并发服务] 使用代理: {proxy_url}")
+            
+        self._browser = await self._playwright.chromium.launch(**launch_options)
 
         # 启动验证码中心
         self._code_hub = VerificationCodeHub(self.qq_email_config)
@@ -1026,6 +1035,7 @@ async def get_concurrent_service(config: dict = None) -> ConcurrentAutoLoginServ
                 "verification_timeout": auto_login_config.verification_timeout,
                 "headless": getattr(auto_login_config, 'headless', True),
                 "yescaptcha_api_key": getattr(auto_login_config, 'yescaptcha_api_key', ''),
+                "proxy": config_manager.config.proxy,
             }
 
         concurrent_login_service = ConcurrentAutoLoginService(config)

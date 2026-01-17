@@ -264,10 +264,13 @@ class CredentialRefreshService:
                     "headless": getattr(auto_login_config, 'headless', True),
                     # 添加 YesCaptcha API key（用于绕过 reCAPTCHA）
                     "yescaptcha_api_key": getattr(auto_login_config, 'yescaptcha_api_key', ''),
+                    # 添加代理配置
+                    "proxy": config.proxy,
                 }
                 self._auto_login_service = AutoLoginService(self._config_dict)
                 # 打印服务状态
                 captcha_status = "Configured" if self._config_dict['yescaptcha_api_key'] else "Not configured"
+                proxy_status = self._config_dict['proxy'] or "None"
 
                 print(f"\n{'='*60}")
                 print(f"[Credential Service] Concurrent Auto-Refresh Initialized")
@@ -275,6 +278,7 @@ class CredentialRefreshService:
                 print(f"  - Max Concurrent: {self._max_concurrent}")
                 print(f"  - Refresh Cooldown: {self._refresh_interval}s")
                 print(f"  - Headless Mode: {self._config_dict['headless']}")
+                print(f"  - Proxy: {proxy_status}")
                 print(f"  - YesCaptcha: {captcha_status}")
                 print(f"  - QQ Email: {auto_login_config.qq_email.address}")
                 print(f"{'='*60}\n")
@@ -323,15 +327,25 @@ class CredentialRefreshService:
                 # 启动浏览器
                 print("[Credential Service] Initializing shared browser...")
                 self._playwright = await async_playwright().start()
-                self._browser = await self._playwright.chromium.launch(
-                    headless=self._config_dict.get("headless", True),
-                    args=[
+                
+                # 准备浏览器启动参数
+                launch_options = {
+                    "headless": self._config_dict.get("headless", True),
+                    "args": [
                         "--disable-blink-features=AutomationControlled",
                         "--disable-dev-shm-usage",
                         "--no-first-run",
                         "--disable-infobars",
                     ]
-                )
+                }
+                
+                # 如果配置了代理，添加到启动参数
+                proxy_url = self._config_dict.get("proxy")
+                if proxy_url:
+                    launch_options["proxy"] = {"server": proxy_url}
+                    print(f"[Credential Service] Using proxy for browser: {proxy_url}")
+                
+                self._browser = await self._playwright.chromium.launch(**launch_options)
 
                 # 启动验证码中心
                 print("[Credential Service] Starting verification code hub...")

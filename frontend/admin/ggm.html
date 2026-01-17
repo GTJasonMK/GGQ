@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GGM Console</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #f0b429;
+            --accent-dim: rgba(240, 180, 41, 0.15);
+            --success: #3fb950;
+            --success-dim: rgba(63, 185, 80, 0.15);
+            --warning: #d29922;
+            --warning-dim: rgba(210, 153, 34, 0.15);
+            --danger: #f85149;
+            --danger-dim: rgba(248, 81, 73, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn-primary.btn-full {
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: #e5a820;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        /* 主布局 */
+        .app-layout {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 240px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .sidebar-header h1 span {
+            color: var(--accent);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-info span {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .main-content {
+            margin-left: 240px;
+            min-height: 100vh;
+            background: var(--bg-primary);
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .page-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .refresh-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .refresh-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .content-area {
+            padding: 32px;
+        }
+
+        /* 统计卡片 */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--border-color);
+        }
+
+        .stat-card.accent::before { background: var(--accent); }
+        .stat-card.success::before { background: var(--success); }
+        .stat-card.warning::before { background: var(--warning); }
+        .stat-card.danger::before { background: var(--danger); }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stat-value.accent { color: var(--accent); }
+        .stat-value.success { color: var(--success); }
+        .stat-value.warning { color: var(--warning); }
+        .stat-value.danger { color: var(--danger); }
+
+        /* 面板 */
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .panel-body {
+            padding: 0;
+        }
+
+        /* 账号表格 */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table td {
+            padding: 14px 16px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tr:hover {
+            background: rgba(240, 180, 41, 0.03);
+        }
+
+        .account-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .account-index {
+            width: 28px;
+            height: 28px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .account-note {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .account-id {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        /* 状态标签 */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            gap: 4px;
+        }
+
+        .badge-success {
+            background: var(--success-dim);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: var(--warning-dim);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background: var(--danger-dim);
+            color: var(--danger);
+        }
+
+        .badge-muted {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-track {
+            width: 60px;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
+        .progress-fill.success { background: var(--success); }
+        .progress-fill.warning { background: var(--warning); }
+        .progress-fill.danger { background: var(--danger); }
+        .progress-fill.accent { background: var(--accent); }
+
+        .progress-value {
+            font-size: 12px;
+            font-weight: 500;
+            min-width: 45px;
+        }
+
+        /* 缓存标签 */
+        .cache-tags {
+            display: flex;
+            gap: 4px;
+        }
+
+        .cache-tag {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+        }
+
+        .cache-tag.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        /* 请求统计 */
+        .req-stats {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .req-success { color: var(--success); }
+        .req-fail { color: var(--danger); }
+
+        /* Token 管理 */
+        .token-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .token-stat {
+            text-align: center;
+        }
+
+        .token-stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .token-stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .token-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 80px 80px 100px;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 12px;
+        }
+
+        .token-item:last-child {
+            border-bottom: none;
+        }
+
+        .token-item:hover {
+            background: rgba(240, 180, 41, 0.03);
+        }
+
+        .token-name {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .token-value {
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .token-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* 隐藏 */
+        .hidden {
+            display: none !important;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .stats-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+            .sidebar-header h1, .nav-item span, .sidebar-footer {
+                display: none;
+            }
+            .nav-item {
+                justify-content: center;
+                padding: 12px;
+            }
+            .nav-item svg {
+                margin: 0;
+            }
+            .main-content {
+                margin-left: 60px;
+            }
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主应用 -->
+    <div class="app-layout" id="appLayout">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>GGM<span>.</span></h1>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" onclick="showSection('dashboard')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    <span id="navDashboard">Dashboard</span>
+                </div>
+                <div class="nav-item" onclick="showSection('accounts')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span id="navAccounts">Accounts</span>
+                </div>
+                <div class="nav-item" onclick="showSection('tokens')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                    <span id="navTokens">API Tokens</span>
+                </div>
+                <div class="nav-item" onclick="showSection('quotas')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <span id="navQuotas">User Quotas</span>
+                </div>
+                <div style="height: 1px; background: var(--border-color); margin: 12px 0;"></div>
+                <a href="index.html" class="nav-item" style="text-decoration: none; color: inherit;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z"></path></svg>
+                    <span id="navBack">Back to Admin</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span>Admin</span>
+                    <button class="btn btn-secondary btn-sm" onclick="switchLanguage()" id="langSwitcher">EN</button>
+                    <button class="btn btn-secondary btn-sm" onclick="logout()" id="btnLogout">Logout</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <div class="top-bar">
+                <h2 class="page-title" id="pageTitle">Dashboard</h2>
+                <div class="top-bar-actions">
+                    <div class="refresh-indicator">
+                        <div class="refresh-dot"></div>
+                        <span id="textAutoRefresh">Auto refresh</span>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="refreshAll()" id="btnRefresh">Refresh</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Dashboard Section -->
+                <section id="sectionDashboard">
+                    <div class="stats-row">
+                        <div class="stat-card accent">
+                            <div class="stat-label" id="labelAvailable">Available</div>
+                            <div class="stat-value accent" id="statAvailable">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label" id="labelTotalAccounts">Total Accounts</div>
+                            <div class="stat-value" id="statTotal">-</div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-label" id="labelAvgScore">Avg Score</div>
+                            <div class="stat-value" id="statScore">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label" id="labelSuccessRate">Success Rate</div>
+                            <div class="stat-value" id="statSuccessRate">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label" id="labelConcurrent">Concurrent</div>
+                            <div class="stat-value" id="statConcurrent">0</div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title" id="panelAccountOverview">Account Overview</span>
+                        </div>
+                        <div class="panel-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Account</th>
+                                        <th>Status</th>
+                                        <th>Health Score</th>
+                                        <th>Success Rate</th>
+                                        <th>Requests</th>
+                                        <th>Cache</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accountTableBody">
+                                    <tr><td colspan="7" class="empty-state">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Accounts Section -->
+                <section id="sectionAccounts" class="hidden">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title" id="panelAllAccounts">All Accounts</span>
+                        </div>
+                        <div class="panel-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Account</th>
+                                        <th>Status</th>
+                                        <th>Health Score</th>
+                                        <th>Success Rate</th>
+                                        <th>Requests</th>
+                                        <th>Concurrent</th>
+                                        <th>Cache</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accountFullTableBody">
+                                    <tr><td colspan="8" class="empty-state">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tokens Section -->
+                <section id="sectionTokens" class="hidden">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title" id="panelApiTokens">API Tokens</span>
+                            <button class="btn btn-primary btn-sm" onclick="showCreateTokenModal()">+ New Token</button>
+                        </div>
+                        <div class="panel-body">
+                            <div class="token-grid" id="tokenStats">
+                                <div class="token-stat">
+                                    <div class="token-stat-value" id="tokenStatTotal">-</div>
+                                    <div class="token-stat-label">Total</div>
+                                </div>
+                                <div class="token-stat">
+                                    <div class="token-stat-value" id="tokenStatEnabled">-</div>
+                                    <div class="token-stat-label">Enabled</div>
+                                </div>
+                                <div class="token-stat">
+                                    <div class="token-stat-value" id="tokenStatRequests">-</div>
+                                    <div class="token-stat-label">Requests</div>
+                                </div>
+                                <div class="token-stat">
+                                    <div class="token-stat-value" id="tokenStatUsage">-</div>
+                                    <div class="token-stat-label">Token Usage</div>
+                                </div>
+                            </div>
+                            <div id="tokenList">
+                                <div class="empty-state">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Quotas Section -->
+                <section id="sectionQuotas" class="hidden">
+                    <div class="stats-row" style="grid-template-columns: repeat(4, 1fr);">
+                        <div class="stat-card accent">
+                            <div class="stat-label" id="labelQuotaUsers">Total Users</div>
+                            <div class="stat-value accent" id="quotaStatUsers">-</div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-label" id="labelQuotaUnlimited">Unlimited</div>
+                            <div class="stat-value success" id="quotaStatUnlimited">-</div>
+                        </div>
+                        <div class="stat-card danger">
+                            <div class="stat-label" id="labelQuotaExhausted">Exhausted</div>
+                            <div class="stat-value danger" id="quotaStatExhausted">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label" id="labelQuotaTotalUsed">Total Used</div>
+                            <div class="stat-value" id="quotaStatTotalUsed">-</div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title" id="panelUserQuotas">User Quotas</span>
+                            <div style="font-size: 12px; color: var(--text-muted);" id="quotaDefaultHint">Default: 20 requests/user</div>
+                        </div>
+                        <div class="panel-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Status</th>
+                                        <th>Usage</th>
+                                        <th>Quota</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="quotaTableBody">
+                                    <tr><td colspan="5" class="empty-state">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Token Modal -->
+    <div class="modal-overlay" id="createTokenModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Create API Token</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Token Name (optional)</label>
+                    <input type="text" class="form-input" id="tokenName" placeholder="e.g., Production, Testing">
+                </div>
+                <div class="form-group">
+                    <label>Expiration</label>
+                    <select class="form-input" id="tokenExpiry">
+                        <option value="">Never expires</option>
+                        <option value="7">7 days</option>
+                        <option value="30">30 days</option>
+                        <option value="90">90 days</option>
+                        <option value="365">365 days</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('createTokenModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createToken()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Show Token Modal -->
+    <div class="modal-overlay" id="showTokenModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Token Created</h3>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 13px;">
+                    Copy this token now. You won't be able to see it again.
+                </p>
+                <input type="text" class="form-input" id="newTokenValue" readonly style="font-family: monospace;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="copyToken()">Copy</button>
+                <button class="btn btn-secondary" onclick="hideModal('showTokenModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Quota Modal -->
+    <div class="modal-overlay" id="editQuotaModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="editQuotaTitle">Edit Quota</h3>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editQuotaUserId">
+                <div class="form-group">
+                    <label>User</label>
+                    <input type="text" class="form-input" id="editQuotaUsername" readonly style="background: var(--bg-tertiary);">
+                </div>
+                <div class="form-group">
+                    <label>Total Quota</label>
+                    <input type="number" class="form-input" id="editQuotaTotal" min="0" placeholder="e.g., 20">
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="editQuotaUnlimited" style="width: 16px; height: 16px;">
+                        <span>Unlimited (no quota limit)</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="editQuotaReset" style="width: 16px; height: 16px;">
+                        <span>Reset usage to 0</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('editQuotaModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveQuota()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Quota Modal -->
+    <div class="modal-overlay" id="addQuotaModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="addQuotaTitle">Add Quota</h3>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="addQuotaUserId">
+                <div class="form-group">
+                    <label>User</label>
+                    <input type="text" class="form-input" id="addQuotaUsername" readonly style="background: var(--bg-tertiary);">
+                </div>
+                <div class="form-group">
+                    <label>Add Amount</label>
+                    <input type="number" class="form-input" id="addQuotaAmount" min="1" value="10" placeholder="e.g., 10">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('addQuotaModal')">Cancel</button>
+                <button class="btn btn-success" onclick="confirmAddQuota()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../auth/i18n.js"></script>
+    <script src="../config.js"></script>
+    <script src="../auth/auth.js"></script>
+    <script>
+        // 初始化 i18n
+        I18n.init();
+
+        const API_BASE = window.APP_CONFIG ? window.APP_CONFIG.getGGMApi() : 'http://localhost:8000';
+        let token = null;  // 将使用auth服务的JWT
+        let currentSection = 'dashboard';
+
+        function getToken() {
+            return AuthClient.getAccessToken();
+        }
+
+        // 应用语言
+        function applyLanguage() {
+            const t = (cat, key) => I18n.t(cat, key);
+
+            // 侧边栏导航
+            document.getElementById('navDashboard').textContent = t('ggm', 'dashboard') || 'Dashboard';
+            document.getElementById('navAccounts').textContent = t('ggm', 'accounts') || 'Accounts';
+            document.getElementById('navTokens').textContent = t('ggm', 'apiTokens') || 'API Tokens';
+            document.getElementById('navQuotas').textContent = t('ggm', 'userQuotas') || 'User Quotas';
+            document.getElementById('navBack').textContent = t('admin', 'backToAdmin') || 'Back to Admin';
+
+            // 统计标签
+            document.getElementById('labelAvailable').textContent = t('ggm', 'available') || 'Available';
+            document.getElementById('labelTotalAccounts').textContent = t('ggm', 'totalAccounts');
+            document.getElementById('labelAvgScore').textContent = t('ggm', 'avgScore') || 'Avg Score';
+            document.getElementById('labelSuccessRate').textContent = t('ggm', 'successRate') || 'Success Rate';
+            document.getElementById('labelConcurrent').textContent = t('ggm', 'concurrent') || 'Concurrent';
+
+            // 面板标题
+            document.getElementById('panelAccountOverview').textContent = t('ggm', 'accountOverview') || 'Account Overview';
+            document.getElementById('panelAllAccounts').textContent = t('ggm', 'allAccounts') || 'All Accounts';
+            document.getElementById('panelApiTokens').textContent = t('ggm', 'apiTokens') || 'API Tokens';
+            document.getElementById('panelUserQuotas').textContent = t('ggm', 'userQuotas') || 'User Quotas';
+
+            // 顶部栏
+            document.getElementById('textAutoRefresh').textContent = t('ggm', 'autoRefresh') || 'Auto refresh';
+            document.getElementById('btnRefresh').textContent = t('ggm', 'refresh') || 'Refresh';
+
+            // 页脚
+            document.getElementById('btnLogout').textContent = t('common', 'logout');
+
+            // 语言切换按钮
+            document.getElementById('langSwitcher').textContent = I18n.getLang() === 'zh' ? 'EN' : '中';
+        }
+
+        function switchLanguage() {
+            I18n.toggleLang();
+            applyLanguage();
+        }
+
+        // 首先检查是否通过共享认证系统登录
+        (async function checkSharedAuth() {
+            if (!AuthClient.isAuthenticated()) {
+                // 未登录，跳转到共享登录页面
+                AuthClient.redirectToLogin();
+                return;
+            }
+
+            // 验证token有效性并检查权限
+            try {
+                const user = await AuthClient.getMe();
+                // 检查是否为管理员 (role: 0=超级管理员, 1=管理员)
+                if (user.role > 1) {
+                    alert(I18n.t('common', 'error') + ': ' + I18n.t('portal', 'adminOnly'));
+                    window.location.href = '../index.html';
+                    return;
+                }
+            } catch (e) {
+                // 验证失败，清除token后重定向到登录页面
+                AuthClient.clearTokens();
+                AuthClient.redirectToLogin();
+                return;
+            }
+
+            // 已通过共享认证且为管理员，直接显示应用
+            showApp();
+        })();
+
+        function logout() {
+            // 登出共享认证
+            AuthClient.logout();
+            window.location.href = '../index.html';
+        }
+
+        function showApp() {
+            document.getElementById('appLayout').style.display = 'block';
+            applyLanguage();
+            refreshAll();
+            setInterval(refreshAll, 15000);
+        }
+
+        function showSection(section) {
+            currentSection = section;
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('[id^="section"]').forEach(el => el.classList.add('hidden'));
+
+            event.target.closest('.nav-item').classList.add('active');
+            document.getElementById('section' + section.charAt(0).toUpperCase() + section.slice(1)).classList.remove('hidden');
+
+            const titles = { dashboard: 'Dashboard', accounts: 'Accounts', tokens: 'API Tokens', quotas: 'User Quotas' };
+            document.getElementById('pageTitle').textContent = titles[section];
+
+            // 切换到 Quotas 时刷新配额数据
+            if (section === 'quotas') {
+                refreshQuotas();
+            }
+        }
+
+        async function refreshAll() {
+            try {
+                const [statusRes, healthRes] = await Promise.all([
+                    fetch(API_BASE + '/api/admin/status', { headers: {'Authorization': 'Bearer ' + getToken()} }),
+                    fetch(API_BASE + '/api/admin/health', { headers: {'Authorization': 'Bearer ' + getToken()} })
+                ]);
+
+                if (statusRes.status === 401) { logout(); return; }
+
+                const status = await statusRes.json();
+                const health = await healthRes.json();
+
+                updateDashboard(status, health);
+                refreshTokens();
+            } catch (e) {
+                console.error('Refresh failed:', e);
+                // 显示连接错误提示
+                document.getElementById('statAvailable').textContent = '-';
+                document.getElementById('statTotal').textContent = '-';
+                document.getElementById('statScore').textContent = '-';
+                document.getElementById('statSuccessRate').textContent = '-';
+                document.getElementById('accountTableBody').innerHTML =
+                    `<tr><td colspan="7" class="empty-state" style="color: var(--danger);">GGM service unavailable (${API_BASE})</td></tr>`;
+            }
+        }
+
+        function updateDashboard(status, health) {
+            const scoreMap = {};
+            if (health.accounts) {
+                health.accounts.forEach(acc => scoreMap[acc.index] = acc.score);
+            }
+
+            // Update stats
+            document.getElementById('statAvailable').textContent = health.available_count || 0;
+            document.getElementById('statTotal').textContent = status.accounts.total_accounts;
+            document.getElementById('statScore').textContent = health.avg_score ? health.avg_score.toFixed(1) : '-';
+            document.getElementById('statSuccessRate').textContent = health.avg_success_rate ? (health.avg_success_rate * 100).toFixed(0) + '%' : '-';
+            document.getElementById('statConcurrent').textContent = health.total_concurrent || 0;
+
+            // Update tables
+            const rows = status.accounts.accounts.map(acc => createAccountRow(acc, scoreMap[acc.index])).join('');
+            document.getElementById('accountTableBody').innerHTML = rows || '<tr><td colspan="7" class="empty-state">No accounts</td></tr>';
+            document.getElementById('accountFullTableBody').innerHTML = rows.replace(/colspan="7"/g, 'colspan="8"') || '<tr><td colspan="8" class="empty-state">No accounts</td></tr>';
+        }
+
+        function createAccountRow(acc, score) {
+            const scoreVal = score || 0;
+            const scoreClass = scoreVal >= 100 ? 'success' : scoreVal >= 70 ? 'warning' : 'danger';
+            const successRate = acc.success_rate || 0;
+            const successClass = successRate >= 90 ? 'success' : successRate >= 70 ? 'warning' : 'danger';
+
+            let statusBadge = '<span class="badge badge-success">Active</span>';
+            if (!acc.available) {
+                statusBadge = '<span class="badge badge-danger">Disabled</span>';
+            } else if (acc.cooldown_remaining > 0) {
+                statusBadge = `<span class="badge badge-warning">Cooldown ${Math.ceil(acc.cooldown_remaining)}s</span>`;
+            }
+
+            return `
+                <tr>
+                    <td>
+                        <div class="account-name">
+                            <div class="account-index">${acc.index}</div>
+                            <div>
+                                <div class="account-note">${escapeHtml(acc.note || 'Account ' + acc.index)}</div>
+                                <div class="account-id">${acc.team_id.substring(0, 16)}...</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-track">
+                                <div class="progress-fill ${scoreClass}" style="width: ${Math.min(scoreVal, 150) / 1.5}%"></div>
+                            </div>
+                            <span class="progress-value">${scoreVal.toFixed(1)}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-track">
+                                <div class="progress-fill ${successClass}" style="width: ${successRate}%"></div>
+                            </div>
+                            <span class="progress-value">${successRate}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="req-stats">
+                            <span class="req-success">${acc.total_requests}</span>
+                            <span>/</span>
+                            <span class="req-fail">${acc.failed_requests}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cache-tags">
+                            <span class="cache-tag ${acc.has_jwt ? 'active' : ''}">JWT</span>
+                            <span class="cache-tag ${acc.has_session ? 'active' : ''}">SES</span>
+                        </div>
+                    </td>
+                    <td>
+                        ${acc.cooldown_remaining > 0 ? `<button class="btn btn-sm btn-success" onclick="clearCooldown(${acc.index})">Clear</button>` : ''}
+                    </td>
+                </tr>
+            `;
+        }
+
+        async function refreshTokens() {
+            try {
+                const response = await fetch(API_BASE + '/api/admin/api-tokens', {
+                    headers: {'Authorization': 'Bearer ' + getToken()}
+                });
+                const data = await response.json();
+
+                document.getElementById('tokenStatTotal').textContent = data.stats.total_tokens;
+                document.getElementById('tokenStatEnabled').textContent = data.stats.enabled_tokens;
+                document.getElementById('tokenStatRequests').textContent = formatNumber(data.stats.total_requests);
+                document.getElementById('tokenStatUsage').textContent = formatNumber(data.stats.total_token_usage);
+
+                if (data.tokens.length === 0) {
+                    document.getElementById('tokenList').innerHTML = '<div class="empty-state">No tokens yet</div>';
+                    return;
+                }
+
+                document.getElementById('tokenList').innerHTML = data.tokens.map(t => {
+                    let badge = '<span class="badge badge-success">Enabled</span>';
+                    if (t.is_legacy) badge = '<span class="badge badge-muted">Static</span>';
+                    else if (!t.enabled) badge = '<span class="badge badge-danger">Disabled</span>';
+
+                    return `
+                        <div class="token-item">
+                            <div>
+                                <div class="token-name">${escapeHtml(t.name || 'Unnamed')}</div>
+                                <span class="token-value">${t.token}</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted)">${t.created_at ? formatDate(t.created_at) : '-'}</div>
+                            <div style="font-size: 12px; color: var(--text-muted)">${t.last_used_at ? formatDate(t.last_used_at) : 'Never'}</div>
+                            <div style="font-size: 12px">${formatNumber(t.request_count)}</div>
+                            <div>${badge}</div>
+                            <div class="token-actions">
+                                ${t.is_legacy ? '' : `
+                                    ${t.enabled ?
+                                        `<button class="btn btn-sm btn-secondary" onclick="toggleToken('${t.token}', false)">Disable</button>` :
+                                        `<button class="btn btn-sm btn-success" onclick="toggleToken('${t.token}', true)">Enable</button>`
+                                    }
+                                    <button class="btn btn-sm btn-danger" onclick="deleteToken('${t.token}')">Delete</button>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                console.error('Token refresh failed:', e);
+            }
+        }
+
+        async function clearCooldown(index) {
+            await fetch(`${API_BASE}/api/admin/accounts/${index}/clear-cooldown`, {
+                method: 'POST',
+                headers: {'Authorization': 'Bearer ' + getToken()}
+            });
+            refreshAll();
+        }
+
+        function showCreateTokenModal() {
+            document.getElementById('tokenName').value = '';
+            document.getElementById('tokenExpiry').value = '';
+            document.getElementById('createTokenModal').classList.add('show');
+        }
+
+        function hideModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        async function createToken() {
+            const name = document.getElementById('tokenName').value;
+            const expiry = document.getElementById('tokenExpiry').value;
+            const params = new URLSearchParams();
+            if (name) params.append('name', name);
+            if (expiry) params.append('expires_days', expiry);
+
+            try {
+                const response = await fetch(API_BASE + '/api/admin/api-tokens?' + params.toString(), {
+                    method: 'POST',
+                    headers: {'Authorization': 'Bearer ' + getToken()}
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert('Failed to create token: ' + (error.detail || 'Unknown error'));
+                    return;
+                }
+
+                const data = await response.json();
+
+                hideModal('createTokenModal');
+                document.getElementById('newTokenValue').value = data.token;
+                document.getElementById('showTokenModal').classList.add('show');
+                refreshTokens();
+            } catch (e) {
+                console.error('Create token error:', e);
+                alert('Failed to create token: ' + e.message);
+            }
+        }
+
+        function copyToken() {
+            const input = document.getElementById('newTokenValue');
+            input.select();
+            document.execCommand('copy');
+        }
+
+        async function toggleToken(tokenValue, enable) {
+            const prefix = tokenValue.substring(0, 8);
+            await fetch(`${API_BASE}/api/admin/api-tokens/${prefix}/${enable ? 'enable' : 'disable'}`, {
+                method: 'POST',
+                headers: {'Authorization': 'Bearer ' + getToken()}
+            });
+            refreshTokens();
+        }
+
+        async function deleteToken(tokenValue) {
+            if (!confirm('Delete this token?')) return;
+            await fetch(`${API_BASE}/api/admin/api-tokens/${encodeURIComponent(tokenValue)}`, {
+                method: 'DELETE',
+                headers: {'Authorization': 'Bearer ' + getToken()}
+            });
+            refreshTokens();
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp * 1000);
+            const diff = Date.now() - date.getTime();
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==================== 配额管理 ====================
+
+        const AUTH_BASE = window.APP_CONFIG ? window.APP_CONFIG.getAuthApi() : 'http://localhost:8001';
+
+        async function refreshQuotas() {
+            try {
+                // 同时获取用户列表和配额数据
+                const [usersRes, quotasRes] = await Promise.all([
+                    fetch(AUTH_BASE + '/api/users?page_size=100', {
+                        headers: {'Authorization': 'Bearer ' + getToken()}
+                    }),
+                    fetch(API_BASE + '/api/admin/quotas', {
+                        headers: {'Authorization': 'Bearer ' + getToken()}
+                    })
+                ]);
+
+                if (usersRes.status === 401 || quotasRes.status === 401) {
+                    logout();
+                    return;
+                }
+
+                // 解析配额数据
+                let quotaMap = {};
+                let stats = { total_users: 0, unlimited_users: 0, exhausted_users: 0, total_used: 0, default_quota: 20 };
+
+                if (quotasRes.ok) {
+                    const quotaData = await quotasRes.json();
+                    stats = quotaData.stats || stats;
+                    // 构建 user_id -> quota 映射
+                    for (const q of (quotaData.quotas || [])) {
+                        quotaMap[q.user_id] = q;
+                    }
+                }
+
+                // 解析用户列表
+                let users = [];
+                if (usersRes.ok) {
+                    const userData = await usersRes.json();
+                    users = userData.users || [];
+                }
+
+                // 合并数据：为每个用户添加配额信息
+                const mergedData = users.map(user => {
+                    const quota = quotaMap[user.id];
+                    if (quota) {
+                        return {
+                            user_id: user.id,
+                            username: user.username,
+                            role: user.role,
+                            role_name: user.role_name,
+                            is_active: user.is_active,
+                            total_quota: quota.total_quota,
+                            used_quota: quota.used_quota,
+                            remaining: quota.remaining,
+                            unlimited: quota.unlimited,
+                            is_exhausted: quota.is_exhausted
+                        };
+                    } else {
+                        // 没有配额记录的用户，显示默认值
+                        const isAdmin = user.role <= 1;
+                        return {
+                            user_id: user.id,
+                            username: user.username,
+                            role: user.role,
+                            role_name: user.role_name,
+                            is_active: user.is_active,
+                            total_quota: stats.default_quota,
+                            used_quota: 0,
+                            remaining: isAdmin ? 999999 : stats.default_quota,
+                            unlimited: isAdmin,
+                            is_exhausted: false,
+                            no_record: true  // 标记为尚未使用
+                        };
+                    }
+                });
+
+                // 更新统计（基于合并后的数据）
+                stats.total_users = mergedData.length;
+                stats.unlimited_users = mergedData.filter(u => u.unlimited).length;
+                stats.exhausted_users = mergedData.filter(u => u.is_exhausted && !u.unlimited).length;
+
+                updateQuotaStats(stats);
+                updateQuotaTable(mergedData);
+            } catch (e) {
+                console.error('Quota refresh failed:', e);
+                document.getElementById('quotaStatUsers').textContent = '-';
+                document.getElementById('quotaStatUnlimited').textContent = '-';
+                document.getElementById('quotaStatExhausted').textContent = '-';
+                document.getElementById('quotaStatTotalUsed').textContent = '-';
+                document.getElementById('quotaTableBody').innerHTML =
+                    `<tr><td colspan="5" class="empty-state" style="color: var(--danger);">Failed to load quotas (check services)</td></tr>`;
+            }
+        }
+
+        function updateQuotaStats(stats) {
+            document.getElementById('quotaStatUsers').textContent = stats.total_users;
+            document.getElementById('quotaStatUnlimited').textContent = stats.unlimited_users;
+            document.getElementById('quotaStatExhausted').textContent = stats.exhausted_users;
+            document.getElementById('quotaStatTotalUsed').textContent = formatNumber(stats.total_used);
+            document.getElementById('quotaDefaultHint').textContent = `Default: ${stats.default_quota} requests/user`;
+        }
+
+        function updateQuotaTable(quotas) {
+            if (quotas.length === 0) {
+                document.getElementById('quotaTableBody').innerHTML =
+                    '<tr><td colspan="5" class="empty-state">No users yet</td></tr>';
+                return;
+            }
+
+            // 按角色和使用量排序：管理员优先，然后按使用量倒序
+            quotas.sort((a, b) => {
+                if (a.role !== b.role) return a.role - b.role;
+                return b.used_quota - a.used_quota;
+            });
+
+            const rows = quotas.map(q => {
+                // 状态标签
+                let statusBadge;
+                if (q.unlimited) {
+                    statusBadge = '<span class="badge badge-success">Unlimited</span>';
+                } else if (q.is_exhausted) {
+                    statusBadge = '<span class="badge badge-danger">Exhausted</span>';
+                } else if (q.no_record) {
+                    statusBadge = '<span class="badge badge-muted">Not Used</span>';
+                } else {
+                    statusBadge = '<span class="badge badge-muted">Normal</span>';
+                }
+
+                // 角色标签
+                let roleBadge = '';
+                if (q.role === 0) {
+                    roleBadge = '<span class="badge badge-warning" style="margin-left: 4px;">Super</span>';
+                } else if (q.role === 1) {
+                    roleBadge = '<span class="badge badge-warning" style="margin-left: 4px;">Admin</span>';
+                }
+
+                const usagePercent = q.unlimited ? 0 : Math.min(100, (q.used_quota / q.total_quota) * 100);
+                const usageClass = usagePercent >= 90 ? 'danger' : usagePercent >= 70 ? 'warning' : 'success';
+
+                return `
+                    <tr${q.no_record ? ' style="opacity: 0.7;"' : ''}>
+                        <td>
+                            <div class="account-name">
+                                <div class="account-index">${q.user_id}</div>
+                                <div>
+                                    <div class="account-note">${escapeHtml(q.username || 'User ' + q.user_id)}${roleBadge}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-track">
+                                    <div class="progress-fill ${usageClass}" style="width: ${usagePercent}%"></div>
+                                </div>
+                                <span class="progress-value">${q.used_quota}/${q.unlimited ? '∞' : q.total_quota}</span>
+                            </div>
+                        </td>
+                        <td style="font-family: monospace;">${q.unlimited ? 'Unlimited' : q.remaining + ' left'}</td>
+                        <td>
+                            <div class="token-actions">
+                                <button class="btn btn-sm btn-secondary" onclick="showEditQuota(${q.user_id}, '${escapeHtml(q.username || '')}', ${q.total_quota}, ${q.unlimited})">Edit</button>
+                                <button class="btn btn-sm btn-success" onclick="showAddQuota(${q.user_id}, '${escapeHtml(q.username || '')}')">+Add</button>
+                                ${!q.unlimited && q.used_quota > 0 ? `<button class="btn btn-sm btn-secondary" onclick="resetQuota(${q.user_id})">Reset</button>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('quotaTableBody').innerHTML = rows;
+        }
+
+        function showEditQuota(userId, username, totalQuota, unlimited) {
+            document.getElementById('editQuotaUserId').value = userId;
+            document.getElementById('editQuotaUsername').value = username || 'User ' + userId;
+            document.getElementById('editQuotaTotal').value = totalQuota;
+            document.getElementById('editQuotaUnlimited').checked = unlimited;
+            document.getElementById('editQuotaReset').checked = false;
+            document.getElementById('editQuotaModal').classList.add('show');
+        }
+
+        async function saveQuota() {
+            const userId = document.getElementById('editQuotaUserId').value;
+            const totalQuota = parseInt(document.getElementById('editQuotaTotal').value);
+            const unlimited = document.getElementById('editQuotaUnlimited').checked;
+            const resetUsage = document.getElementById('editQuotaReset').checked;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/quotas/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        total_quota: totalQuota,
+                        unlimited: unlimited,
+                        reset_usage: resetUsage
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert('Failed to update quota: ' + (error.detail || 'Unknown error'));
+                    return;
+                }
+
+                hideModal('editQuotaModal');
+                refreshQuotas();
+            } catch (e) {
+                console.error('Save quota error:', e);
+                alert('Failed to save quota: ' + e.message);
+            }
+        }
+
+        function showAddQuota(userId, username) {
+            document.getElementById('addQuotaUserId').value = userId;
+            document.getElementById('addQuotaUsername').value = username || 'User ' + userId;
+            document.getElementById('addQuotaAmount').value = 10;
+            document.getElementById('addQuotaModal').classList.add('show');
+        }
+
+        async function confirmAddQuota() {
+            const userId = document.getElementById('addQuotaUserId').value;
+            const amount = parseInt(document.getElementById('addQuotaAmount').value);
+
+            if (amount <= 0) {
+                alert('Amount must be positive');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/quotas/${userId}/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + getToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ amount: amount })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert('Failed to add quota: ' + (error.detail || 'Unknown error'));
+                    return;
+                }
+
+                hideModal('addQuotaModal');
+                refreshQuotas();
+            } catch (e) {
+                console.error('Add quota error:', e);
+                alert('Failed to add quota: ' + e.message);
+            }
+        }
+
+        async function resetQuota(userId) {
+            if (!confirm('Reset usage to 0 for this user?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/quotas/${userId}/reset`, {
+                    method: 'POST',
+                    headers: {'Authorization': 'Bearer ' + getToken()}
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert('Failed to reset quota: ' + (error.detail || 'Unknown error'));
+                    return;
+                }
+
+                refreshQuotas();
+            } catch (e) {
+                console.error('Reset quota error:', e);
+                alert('Failed to reset quota: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

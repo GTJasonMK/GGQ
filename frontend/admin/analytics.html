@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usage Analytics</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #f0b429;
+            --accent-subtle: rgba(240, 180, 41, 0.15);
+            --success: #3fb950;
+            --warning: #d29922;
+            --danger: #f85149;
+            --info: #58a6ff;
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .back-btn {
+            padding: 8px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--accent-subtle);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .stat-card.highlight {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(240, 180, 41, 0.05) 100%);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-value.accent { color: var(--accent); }
+        .stat-value.success { color: var(--success); }
+        .stat-value.warning { color: var(--warning); }
+        .stat-value.info { color: var(--info); }
+
+        .stat-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* 图表区域 */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .chart-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chart-btn {
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chart-btn:hover, .chart-btn.active {
+            background: var(--accent-subtle);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* 简单的柱状图 */
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 200px;
+            padding: 20px 0;
+        }
+
+        .bar-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bar {
+            width: 100%;
+            max-width: 40px;
+            background: var(--accent);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s ease;
+            min-height: 4px;
+        }
+
+        .bar-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .bar-value {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* 饼图模拟 */
+        .pie-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 10px 0;
+        }
+
+        .pie-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pie-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .pie-info {
+            flex: 1;
+        }
+
+        .pie-name {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .pie-count {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .pie-bar-container {
+            flex: 1;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .pie-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* 用户排名列表 */
+        .user-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+
+        .user-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .user-rank {
+            width: 28px;
+            height: 28px;
+            background: var(--bg-tertiary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .user-rank.top { background: var(--accent); color: #000; }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .user-id {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .user-stats {
+            text-align: right;
+        }
+
+        .user-requests {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .user-tokens {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 活动记录 */
+        .activity-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .activity-time {
+            color: var(--text-muted);
+            font-size: 12px;
+            min-width: 80px;
+        }
+
+        .activity-user {
+            color: var(--info);
+            min-width: 100px;
+        }
+
+        .activity-model {
+            color: var(--text-secondary);
+            min-width: 120px;
+        }
+
+        .activity-tokens {
+            color: var(--accent);
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .activity-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .activity-status.success { background: var(--success); }
+        .activity-status.error { background: var(--danger); }
+
+        /* 小时分布 */
+        .hourly-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 100px;
+            padding: 10px 0;
+        }
+
+        .hour-bar {
+            flex: 1;
+            background: var(--accent);
+            border-radius: 2px 2px 0 0;
+            min-height: 2px;
+            transition: height 0.3s ease;
+        }
+
+        .hour-bar:hover {
+            background: var(--accent-hover, #e5a820);
+        }
+
+        .hour-labels {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0 0;
+        }
+
+        .hour-label {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* 加载状态 */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 错误状态 */
+        .error-message {
+            padding: 20px;
+            text-align: center;
+            color: var(--danger);
+        }
+
+        /* 时间范围选择器 */
+        .time-range {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        /* 刷新按钮 */
+        .refresh-btn {
+            padding: 8px 16px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(240, 180, 41, 0.3);
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <h1>Usage Analytics</h1>
+            <a href="index.html" class="back-btn">Admin</a>
+        </div>
+        <div class="header-right">
+            <button class="refresh-btn" onclick="refreshAll()" id="refreshBtn">Refresh</button>
+        </div>
+    </header>
+
+    <main class="main">
+        <!-- 总览统计 -->
+        <div class="stats-grid" id="overviewStats">
+            <div class="loading"><div class="spinner"></div>Loading...</div>
+        </div>
+
+        <!-- 图表行 1: 使用趋势 + 来源分布 -->
+        <div class="charts-row">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Usage Trend (Last 7 Days)</span>
+                    <div class="chart-controls">
+                        <button class="chart-btn active" onclick="setTrendDays(7)">7D</button>
+                        <button class="chart-btn" onclick="setTrendDays(14)">14D</button>
+                        <button class="chart-btn" onclick="setTrendDays(30)">30D</button>
+                    </div>
+                </div>
+                <div class="bar-chart" id="trendChart">
+                    <div class="loading"><div class="spinner"></div>Loading...</div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Source Distribution</span>
+                </div>
+                <div class="pie-chart" id="sourceChart">
+                    <div class="loading"><div class="spinner"></div>Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图表行 2: 模型分布 + 小时分布 -->
+        <div class="charts-row">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Model Usage</span>
+                </div>
+                <div class="pie-chart" id="modelChart">
+                    <div class="loading"><div class="spinner"></div>Loading...</div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Hourly Distribution (Avg)</span>
+                </div>
+                <div id="hourlyChart">
+                    <div class="hourly-chart"></div>
+                    <div class="hour-labels">
+                        <span class="hour-label">0:00</span>
+                        <span class="hour-label">6:00</span>
+                        <span class="hour-label">12:00</span>
+                        <span class="hour-label">18:00</span>
+                        <span class="hour-label">24:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图表行 3: 用户排名 + 最近活动 -->
+        <div class="charts-row">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Top Users (Last 30 Days)</span>
+                </div>
+                <div class="user-list" id="topUsers">
+                    <div class="loading"><div class="spinner"></div>Loading...</div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <span class="chart-title">Recent Activity</span>
+                </div>
+                <div class="activity-list" id="recentActivity">
+                    <div class="loading"><div class="spinner"></div>Loading...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../config.js"></script>
+    <script src="../auth/auth.js"></script>
+    <script>
+        // API 基础路径（从全局配置读取，空字符串表示使用相对路径）
+        const GGM_API = window.APP_CONFIG ? window.APP_CONFIG.getGGMApi() : 'http://localhost:8000';
+        let trendDays = 7;
+
+        // 获取 admin token
+        function getAdminToken() {
+            return localStorage.getItem('auth_access_token') || '';
+        }
+
+        // API 请求封装
+        async function apiRequest(endpoint) {
+            const token = getAdminToken();
+            const response = await fetch(`${GGM_API}/api/admin${endpoint}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+            return response.json();
+        }
+
+        // 格式化数字
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        // 格式化时间
+        function formatTime(timestamp) {
+            const date = new Date(timestamp * 1000);
+            return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // 加载总览统计
+        async function loadOverview() {
+            const container = document.getElementById('overviewStats');
+            try {
+                const data = await apiRequest('/analytics/overview');
+                container.innerHTML = `
+                    <div class="stat-card highlight">
+                        <div class="stat-label">Total Users</div>
+                        <div class="stat-value accent">${formatNumber(data.total_users)}</div>
+                        <div class="stat-sub">Active: ${data.active_users}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Requests</div>
+                        <div class="stat-value">${formatNumber(data.total_requests)}</div>
+                        <div class="stat-sub">Today: ${formatNumber(data.today?.requests || 0)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Tokens</div>
+                        <div class="stat-value info">${formatNumber(data.total_tokens)}</div>
+                        <div class="stat-sub">Today: ${formatNumber(data.today?.tokens || 0)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Conversations</div>
+                        <div class="stat-value">${formatNumber(data.total_conversations)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Success Rate</div>
+                        <div class="stat-value ${data.success_rate >= 95 ? 'success' : data.success_rate >= 80 ? 'warning' : 'danger'}">${data.success_rate}%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Today Active Users</div>
+                        <div class="stat-value success">${data.today?.active_users || 0}</div>
+                    </div>
+                `;
+            } catch (e) {
+                container.innerHTML = `<div class="error-message">Failed to load overview: ${e.message}</div>`;
+            }
+        }
+
+        // 加载使用趋势
+        async function loadTrend() {
+            const container = document.getElementById('trendChart');
+            try {
+                const data = await apiRequest(`/analytics/trend?days=${trendDays}`);
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="loading">No data</div>';
+                    return;
+                }
+
+                const maxRequests = Math.max(...data.map(d => d.requests), 1);
+                container.innerHTML = data.map(d => {
+                    const height = Math.max(4, (d.requests / maxRequests) * 160);
+                    const dateStr = d.date.slice(5); // MM-DD
+                    return `
+                        <div class="bar-item">
+                            <div class="bar-value">${d.requests}</div>
+                            <div class="bar" style="height: ${height}px" title="${d.date}: ${d.requests} requests, ${d.active_users} users"></div>
+                            <div class="bar-label">${dateStr}</div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="error-message">Failed to load trend: ${e.message}</div>`;
+            }
+        }
+
+        // 加载来源分布
+        async function loadSourceDistribution() {
+            const container = document.getElementById('sourceChart');
+            try {
+                const data = await apiRequest('/analytics/sources');
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="loading">No data</div>';
+                    return;
+                }
+
+                const total = data.reduce((sum, d) => sum + d.requests, 0);
+                const colors = ['var(--accent)', 'var(--info)', 'var(--success)', 'var(--warning)'];
+
+                container.innerHTML = data.map((d, i) => {
+                    const percent = total > 0 ? (d.requests / total * 100).toFixed(1) : 0;
+                    return `
+                        <div class="pie-item">
+                            <div class="pie-color" style="background: ${colors[i % colors.length]}"></div>
+                            <div class="pie-info">
+                                <div class="pie-name">${d.source}</div>
+                                <div class="pie-count">${d.requests} (${percent}%)</div>
+                            </div>
+                            <div class="pie-bar-container">
+                                <div class="pie-bar" style="width: ${percent}%; background: ${colors[i % colors.length]}"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="error-message">Failed to load source distribution: ${e.message}</div>`;
+            }
+        }
+
+        // 加载模型分布
+        async function loadModelDistribution() {
+            const container = document.getElementById('modelChart');
+            try {
+                const data = await apiRequest('/analytics/models');
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="loading">No data</div>';
+                    return;
+                }
+
+                const total = data.reduce((sum, d) => sum + d.requests, 0);
+                const colors = ['var(--accent)', 'var(--info)', 'var(--success)', 'var(--warning)', 'var(--danger)'];
+
+                container.innerHTML = data.slice(0, 5).map((d, i) => {
+                    const percent = total > 0 ? (d.requests / total * 100).toFixed(1) : 0;
+                    return `
+                        <div class="pie-item">
+                            <div class="pie-color" style="background: ${colors[i % colors.length]}"></div>
+                            <div class="pie-info">
+                                <div class="pie-name">${d.model}</div>
+                                <div class="pie-count">${formatNumber(d.requests)} requests, ${formatNumber(d.tokens)} tokens</div>
+                            </div>
+                            <div class="pie-bar-container">
+                                <div class="pie-bar" style="width: ${percent}%; background: ${colors[i % colors.length]}"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="error-message">Failed to load model distribution: ${e.message}</div>`;
+            }
+        }
+
+        // 加载小时分布
+        async function loadHourlyDistribution() {
+            const container = document.querySelector('#hourlyChart .hourly-chart');
+            try {
+                const data = await apiRequest('/analytics/hourly');
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="loading">No data</div>';
+                    return;
+                }
+
+                const maxRequests = Math.max(...data.map(d => d.requests), 1);
+                container.innerHTML = data.map(d => {
+                    const height = Math.max(2, (d.requests / maxRequests) * 80);
+                    return `<div class="hour-bar" style="height: ${height}px" title="${d.hour}:00 - ${d.requests.toFixed(1)} requests"></div>`;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="error-message">Failed to load hourly distribution: ${e.message}</div>`;
+            }
+        }
+
+        // 加载用户排名
+        async function loadTopUsers() {
+            const container = document.getElementById('topUsers');
+            try {
+                const data = await apiRequest('/analytics/top-users?limit=10');
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="loading">No data</div>';
+                    return;
+                }
+
+                container.innerHTML = data.map((u, i) => `
+                    <div class="user-item" onclick="viewUserConversations(${u.user_id}, '${(u.username || '').replace(/'/g, "\\'")}')" style="cursor: pointer;" title="Click to view conversations">
+                        <div class="user-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
+                        <div class="user-info">
+                            <div class="user-name">${u.username || 'Anonymous'}</div>
+                            <div class="user-id">ID: ${u.user_id || 'N/A'}</div>
+                        </div>
+                        <div class="user-stats">
+                            <div class="user-requests">${formatNumber(u.requests)} requests</div>
+                            <div class="user-tokens">${formatNumber(u.tokens)} tokens</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="error-message">Failed to load top users: ${e.message}</div>`;
+            }
+        }
+
+        // 跳转到会话浏览页面查看指定用户的会话
+        function viewUserConversations(userId, username) {
+            const params = [];
+            if (userId) params.push(`user_id=${userId}`);
+            if (username) params.push(`username=${encodeURIComponent(username)}`);
+            if (params.length > 0) {
+                window.location.href = `conversations.html?${params.join('&')}`;
+            }
+        }
+
+        // 加载最近活动
+        async function loadRecentActivity() {
+            const container = document.getElementById('recentActivity');
+            try {
+                const data = await apiRequest('/analytics/activity?limit=30');
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="loading">No recent activity</div>';
+                    return;
+                }
+
+                container.innerHTML = data.map(a => `
+                    <div class="activity-item">
+                        <div class="activity-status ${a.success ? 'success' : 'error'}"></div>
+                        <div class="activity-time">${formatTime(a.timestamp)}</div>
+                        <div class="activity-user">${a.username || 'Anonymous'}</div>
+                        <div class="activity-model">${a.model || 'N/A'}</div>
+                        <div class="activity-tokens">${formatNumber(a.total_tokens)} tok</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="error-message">Failed to load activity: ${e.message}</div>`;
+            }
+        }
+
+        // 设置趋势天数
+        function setTrendDays(days) {
+            trendDays = days;
+            document.querySelectorAll('.chart-controls .chart-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === days + 'D');
+            });
+            loadTrend();
+        }
+
+        // 刷新所有数据
+        async function refreshAll() {
+            const btn = document.getElementById('refreshBtn');
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+
+            await Promise.all([
+                loadOverview(),
+                loadTrend(),
+                loadSourceDistribution(),
+                loadModelDistribution(),
+                loadHourlyDistribution(),
+                loadTopUsers(),
+                loadRecentActivity()
+            ]);
+
+            btn.disabled = false;
+            btn.textContent = 'Refresh';
+        }
+
+        // 页面加载时检查权限并加载数据
+        (async function init() {
+            if (!AuthClient.isAuthenticated()) {
+                AuthClient.redirectToLogin();
+                return;
+            }
+            try {
+                const user = await AuthClient.getMe();
+                if (user.role > 1) {
+                    alert('Admin access required');
+                    window.location.href = '../index.html';
+                    return;
+                }
+            } catch (e) {
+                AuthClient.clearTokens();
+                AuthClient.redirectToLogin();
+                return;
+            }
+
+            // 加载所有数据
+            refreshAll();
+
+            // 每分钟自动刷新
+            setInterval(refreshAll, 60000);
+        })();
+    </script>
+</body>
+</html>

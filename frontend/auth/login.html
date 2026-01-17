@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Auth</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #f0b429;
+            --accent-hover: #e5a820;
+            --accent-subtle: rgba(240, 180, 41, 0.15);
+            --success: #3fb950;
+            --danger: #f85149;
+            --radius: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(ellipse at top left, rgba(240, 180, 41, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(240, 180, 41, 0.05) 0%, transparent 50%),
+                var(--bg-primary);
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 40px;
+            position: relative;
+        }
+
+        .lang-switcher {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-switcher:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--accent);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #000;
+            margin: 0 auto 16px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .logo p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-subtle);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .error-msg {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .links a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <button class="lang-switcher" id="langSwitcher" onclick="switchLanguage()">EN</button>
+
+            <div class="logo">
+                <div class="logo-icon">A</div>
+                <h1 id="titleText">Welcome Back</h1>
+                <p id="subtitleText">Sign in to continue</p>
+            </div>
+
+            <div class="error-msg" id="errorMsg"></div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="emailOrUsername" id="labelEmailOrUsername">Email or Username</label>
+                    <input type="text" id="emailOrUsername" class="form-input"
+                           placeholder="Enter email or username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" id="labelPassword">Password</label>
+                    <input type="password" id="password" class="form-input"
+                           placeholder="Enter password" required>
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">Sign In</button>
+            </form>
+
+            <div class="links">
+                <span id="noAccountText">Don't have an account?</span>
+                <a href="register.html" id="registerLink">Register with invite code</a>
+            </div>
+
+            <div class="footer-links">
+                <a href="../index.html" id="backToPortalLink">Back to Portal</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="../config.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // 应用语言
+        function applyLanguage() {
+            const t = (cat, key) => I18n.t(cat, key);
+
+            document.getElementById('titleText').textContent = t('auth', 'welcomeBack');
+            document.getElementById('subtitleText').textContent = t('auth', 'signInToContinue');
+            document.getElementById('labelEmailOrUsername').textContent = t('auth', 'emailOrUsername');
+            document.getElementById('labelPassword').textContent = t('auth', 'password');
+            document.getElementById('emailOrUsername').placeholder = t('auth', 'enterEmailOrUsername');
+            document.getElementById('password').placeholder = t('auth', 'enterPassword');
+            document.getElementById('submitBtn').textContent = t('common', 'login');
+            document.getElementById('noAccountText').textContent = t('auth', 'noAccount');
+            document.getElementById('registerLink').textContent = t('auth', 'registerWithCode');
+            document.getElementById('backToPortalLink').textContent = t('auth', 'backToPortal');
+            document.getElementById('langSwitcher').textContent = I18n.getLang() === 'zh' ? 'EN' : '中';
+
+            document.title = t('common', 'login') + ' - Auth';
+        }
+
+        function switchLanguage() {
+            I18n.toggleLang();
+            applyLanguage();
+        }
+
+        // 检查是否已登录
+        if (AuthClient.isAuthenticated()) {
+            redirectToTarget();
+        }
+
+        function getRedirectUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('redirect') || '../index.html';
+        }
+
+        function redirectToTarget() {
+            window.location.href = getRedirectUrl();
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+
+        function hideError() {
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            hideError();
+
+            const emailOrUsername = document.getElementById('emailOrUsername').value.trim();
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.textContent;
+
+            btn.disabled = true;
+            btn.textContent = I18n.t('auth', 'signingIn');
+
+            try {
+                await AuthClient.login(emailOrUsername, password);
+                redirectToTarget();
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        // 初始化语言
+        applyLanguage();
+    </script>
+</body>
+</html>

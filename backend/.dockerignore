@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv
+venv
+ENV
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Data files (will be mounted as volumes)
+GGM/data
+auth/data
+monitoringDashboard/data
+
+# Logs
+*.log
+
+# Test
+.pytest_cache
+.coverage
+htmlcov
+
+# Config examples
+config.docker.py
+.env*

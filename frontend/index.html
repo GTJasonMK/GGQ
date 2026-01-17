@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal - Project Hub</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #f0b429;
+            --accent-hover: #e5a820;
+            --accent-subtle: rgba(240, 180, 41, 0.15);
+            --success: #3fb950;
+            --danger: #f85149;
+            --radius: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-tertiary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--accent);
+            border: 2px solid var(--border-color);
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .user-role {
+            padding: 4px 10px;
+            background: var(--accent-subtle);
+            color: var(--accent);
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover { background: var(--accent-hover); }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .lang-switcher {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-switcher:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background:
+                radial-gradient(ellipse at top left, rgba(240, 180, 41, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(240, 180, 41, 0.05) 0%, transparent 50%),
+                var(--bg-primary);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .welcome-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        /* Project Grid */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .project-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 24px;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .project-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-subtle);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        .project-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .project-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .project-badge {
+            margin-top: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .project-badge.admin-only {
+            color: var(--accent);
+        }
+
+        /* Login Section (for non-logged-in users) */
+        .login-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .login-section h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .login-section p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .login-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 16px 24px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .welcome-title {
+                font-size: 24px;
+            }
+
+            .project-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">P</div>
+            <span class="logo-text" id="logoText">Portal</span>
+        </a>
+        <div class="header-right">
+            <button class="lang-switcher" id="langSwitcher" onclick="switchLanguage()">EN</button>
+            <!-- 已登录状态 -->
+            <div class="user-info" id="loggedInInfo" style="display: none;">
+                <div class="user-avatar" id="userAvatar">-</div>
+                <span class="user-name" id="userName">-</span>
+                <span class="user-role" id="userRole">-</span>
+                <button class="btn btn-secondary" onclick="handleLogout()" id="logoutBtn">Logout</button>
+            </div>
+            <!-- 未登录状态 -->
+            <div id="loggedOutInfo" style="display: none;">
+                <a href="auth/login.html" class="btn btn-secondary" id="signInBtn">Sign In</a>
+                <a href="auth/register.html" class="btn" id="registerBtn">Register</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <!-- 欢迎区域 -->
+            <div class="welcome-section" id="welcomeSection">
+                <h1 class="welcome-title" id="welcomeTitle">Welcome to Portal</h1>
+                <p class="welcome-subtitle" id="welcomeText">Select a project to get started</p>
+            </div>
+
+            <!-- 未登录提示 -->
+            <div class="login-section hidden" id="loginPrompt">
+                <h2 id="loginPromptTitle">Sign In Required</h2>
+                <p id="loginPromptText">Please sign in to access the projects and tools.</p>
+                <div class="login-buttons">
+                    <a href="auth/login.html" class="btn" id="loginPromptSignIn">Sign In</a>
+                    <a href="auth/register.html" class="btn btn-secondary" id="loginPromptRegister">Register</a>
+                </div>
+            </div>
+
+            <!-- 项目卡片 -->
+            <div class="project-grid hidden" id="projectGrid">
+                <!-- Chat (所有用户可见) -->
+                <a href="chat/index.html" class="project-card" id="chatCard">
+                    <div class="project-icon">C</div>
+                    <h3 class="project-title" id="chatTitle">Chat</h3>
+                    <p class="project-desc" id="chatDesc">AI Chat interface powered by Gemini. Start conversations with advanced AI models.</p>
+                </a>
+
+                <!-- Token Application (所有用户可见) -->
+                <a href="token/index.html" class="project-card" id="tokenCard">
+                    <div class="project-icon" style="background: rgba(63, 185, 80, 0.15);">T</div>
+                    <h3 class="project-title" id="tokenTitle">API Token</h3>
+                    <p class="project-desc" id="tokenDesc">Apply for API access token to use Gemini services programmatically.</p>
+                </a>
+
+                <!-- Admin Panel (管理员可见) -->
+                <a href="admin/index.html" class="project-card hidden" id="adminCard">
+                    <div class="project-icon" style="background: rgba(248, 81, 73, 0.15);">A</div>
+                    <h3 class="project-title" id="adminTitle">Admin Panel</h3>
+                    <p class="project-desc" id="adminDesc">User management, token review, and system administration tools.</p>
+                    <div class="project-badge admin-only" id="adminBadge">Admin Only</div>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Portal v1.0 | <a href="auth/login.html">Auth Service</a></p>
+    </footer>
+
+    <script src="auth/i18n.js"></script>
+    <script src="auth/auth.js"></script>
+    <script>
+        // 应用语言
+        function applyLanguage() {
+            const t = (cat, key) => I18n.t(cat, key);
+
+            document.getElementById('logoText').textContent = t('common', 'appName');
+            document.getElementById('logoutBtn').textContent = t('common', 'logout');
+            document.getElementById('signInBtn').textContent = t('common', 'login');
+            document.getElementById('registerBtn').textContent = t('common', 'register');
+            document.getElementById('welcomeTitle').textContent = t('portal', 'welcomeToPortal');
+            document.getElementById('welcomeText').textContent = t('portal', 'selectProject');
+            document.getElementById('loginPromptTitle').textContent = t('portal', 'signInRequired');
+            document.getElementById('loginPromptText').textContent = t('portal', 'signInToAccess');
+            document.getElementById('loginPromptSignIn').textContent = t('common', 'login');
+            document.getElementById('loginPromptRegister').textContent = t('common', 'register');
+            document.getElementById('chatTitle').textContent = t('portal', 'chatTitle') || 'Chat';
+            document.getElementById('chatDesc').textContent = t('portal', 'chatDesc') || 'AI Chat interface powered by Gemini.';
+            document.getElementById('tokenTitle').textContent = t('portal', 'tokenTitle') || 'API Token';
+            document.getElementById('tokenDesc').textContent = t('portal', 'tokenDesc') || 'Apply for API access token.';
+            document.getElementById('adminTitle').textContent = t('portal', 'adminTitle');
+            document.getElementById('adminDesc').textContent = t('portal', 'adminDesc');
+            document.getElementById('adminBadge').textContent = t('portal', 'adminOnly');
+            document.getElementById('langSwitcher').textContent = I18n.getLang() === 'zh' ? 'EN' : '中';
+
+            document.title = t('common', 'appName') + ' - Project Hub';
+        }
+
+        function switchLanguage() {
+            I18n.toggleLang();
+            applyLanguage();
+            // 如果已登录，更新欢迎语和角色
+            const user = AuthClient.getUser();
+            if (user) {
+                updateWelcomeText(user);
+                document.getElementById('userRole').textContent = I18n.getRoleName(user.role);
+            }
+        }
+
+        function updateWelcomeText(user) {
+            document.getElementById('welcomeText').textContent =
+                I18n.t('portal', 'helloUser', { username: user.username });
+        }
+
+        // 初始化
+        function init() {
+            applyLanguage();
+
+            if (AuthClient.isAuthenticated()) {
+                showLoggedInState();
+            } else {
+                showLoggedOutState();
+            }
+        }
+
+        function showLoggedInState() {
+            const user = AuthClient.getUser();
+
+            if (!user) {
+                // Token存在但没有用户信息，尝试获取
+                AuthClient.getMe().then(user => {
+                    renderLoggedInUI(user);
+                }).catch(() => {
+                    // 获取失败，清除并显示未登录状态
+                    AuthClient.clearTokens();
+                    showLoggedOutState();
+                });
+                return;
+            }
+
+            renderLoggedInUI(user);
+        }
+
+        function renderLoggedInUI(user) {
+            // 显示用户信息
+            document.getElementById('loggedInInfo').style.display = 'flex';
+            document.getElementById('loggedOutInfo').style.display = 'none';
+            document.getElementById('userAvatar').textContent = user.username.charAt(0).toUpperCase();
+            document.getElementById('userName').textContent = user.username;
+            document.getElementById('userRole').textContent = I18n.getRoleName(user.role);
+
+            // 更新欢迎语
+            updateWelcomeText(user);
+
+            // 显示项目卡片
+            document.getElementById('loginPrompt').classList.add('hidden');
+            document.getElementById('projectGrid').classList.remove('hidden');
+
+            // 管理员显示管理面板 (role: 0=超级管理员, 1=管理员)
+            if (user.role <= 1) {
+                document.getElementById('adminCard').classList.remove('hidden');
+            }
+        }
+
+        function showLoggedOutState() {
+            document.getElementById('loggedInInfo').style.display = 'none';
+            document.getElementById('loggedOutInfo').style.display = 'flex';
+
+            // 显示登录提示
+            document.getElementById('loginPrompt').classList.remove('hidden');
+            document.getElementById('projectGrid').classList.add('hidden');
+        }
+
+        async function handleLogout() {
+            await AuthClient.logout();
+            window.location.reload();
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>

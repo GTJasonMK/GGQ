@@ -1,0 +1,38 @@
+# Backend Dependencies
+# 统一管理所有后端服务的依赖
+
+# Web Framework
+fastapi>=0.115.0
+uvicorn>=0.32.0
+
+# HTTP Client
+httpx>=0.25.0
+
+# Data Validation
+pydantic>=2.5.0
+pydantic-settings>=2.0.0
+
+# Database
+sqlalchemy>=2.0.0
+aiosqlite>=0.19.0
+
+# Python Standard Library Extensions
+python-multipart>=0.0.6
+
+# System Monitoring (for monitoringDashboard)
+psutil>=6.1.0
+
+# Email/IMAP (for GGM auto-login)
+aioimaplib>=1.0.0
+
+# Browser Automation (for GGM auto-login)
+playwright>=1.40.0
+
+# Optional: for timezone support
+tzdata>=2023.3
+
+# Auth Service Dependencies
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt==4.0.1
+email-validator>=2.0.0

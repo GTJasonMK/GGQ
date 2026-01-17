@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Auth</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #f0b429;
+            --accent-hover: #e5a820;
+            --accent-subtle: rgba(240, 180, 41, 0.15);
+            --success: #3fb950;
+            --danger: #f85149;
+            --radius: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(ellipse at top left, rgba(240, 180, 41, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(240, 180, 41, 0.05) 0%, transparent 50%),
+                var(--bg-primary);
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+
+        .register-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 40px;
+            position: relative;
+        }
+
+        .lang-switcher {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-switcher:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--accent);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #000;
+            margin: 0 auto 16px;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .logo p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-subtle);
+        }
+
+        .form-input::placeholder { color: var(--text-muted); }
+        .form-input.valid { border-color: var(--success); }
+        .form-input.invalid { border-color: var(--danger); }
+
+        .input-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+        .input-hint.success { color: var(--success); }
+        .input-hint.error { color: var(--danger); }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover { background: var(--accent-hover); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .error-msg, .success-msg {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-msg {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .success-msg {
+            background: rgba(63, 185, 80, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .error-msg.show, .success-msg.show { display: block; }
+
+        .links {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .links a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .links a:hover { text-decoration: underline; }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        /* 步骤视图 */
+        .step-view { display: none; }
+        .step-view.active { display: block; }
+
+        /* 选择方式卡片 */
+        .method-card {
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+
+        .method-card:hover {
+            border-color: var(--accent);
+        }
+
+        .method-card:last-child { margin-bottom: 0; }
+
+        .method-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .method-card-title span { font-size: 20px; }
+
+        .method-card-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .allowed-domains {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+        }
+
+        .allowed-domains strong { color: var(--text-secondary); }
+
+        /* 验证码输入行 */
+        .code-input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .code-input-row .form-input {
+            flex: 1;
+        }
+
+        .send-code-btn {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .send-code-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .send-code-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .send-code-btn.countdown {
+            min-width: 90px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-box">
+            <button class="lang-switcher" id="langSwitcher" onclick="switchLanguage()">EN</button>
+
+            <div class="logo">
+                <div class="logo-icon">A</div>
+                <h1 id="titleText">Create Account</h1>
+                <p id="subtitleText">Choose how to register</p>
+            </div>
+
+            <div class="error-msg" id="errorMsg"></div>
+            <div class="success-msg" id="successMsg"></div>
+
+            <!-- 步骤1: 选择注册方式 -->
+            <div class="step-view active" id="stepChoose">
+                <div class="method-card" onclick="chooseMethod('invite')">
+                    <div class="method-card-title">
+                        <span>🎫</span>
+                        <span id="methodInviteTitle">Invite Code</span>
+                    </div>
+                    <div class="method-card-desc" id="methodInviteDesc">Register with an invite code</div>
+                </div>
+
+                <div class="method-card" onclick="chooseMethod('domain')" id="methodDomainCard">
+                    <div class="method-card-title">
+                        <span>📧</span>
+                        <span id="methodDomainTitle">Allowed Email</span>
+                    </div>
+                    <div class="method-card-desc" id="methodDomainDesc">Register with specific email domains</div>
+                </div>
+            </div>
+
+            <!-- 步骤2: 邀请码注册表单 -->
+            <div class="step-view" id="stepInvite">
+                <form onsubmit="handleInviteRegister(event)">
+                    <div class="form-group">
+                        <label id="labelInviteCode">Invite Code</label>
+                        <input type="text" id="inviteCode" class="form-input" required>
+                        <div class="input-hint" id="codeHint"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelInviteEmail">Email</label>
+                        <input type="email" id="inviteEmail" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelInviteUsername">Username</label>
+                        <input type="text" id="inviteUsername" class="form-input" pattern="^[a-zA-Z0-9_]{3,50}$" required>
+                        <div class="input-hint" id="inviteUsernameHint"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelInvitePassword">Password</label>
+                        <input type="password" id="invitePassword" class="form-input" minlength="8" required>
+                        <div class="input-hint" id="invitePasswordHint"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelInviteConfirmPassword">Confirm Password</label>
+                        <input type="password" id="inviteConfirmPassword" class="form-input" required>
+                    </div>
+
+                    <button type="submit" class="btn" id="inviteRegisterBtn">Create Account</button>
+                    <button type="button" class="btn btn-secondary" style="margin-top: 12px;" onclick="goBack()" id="backBtn1">Back</button>
+                </form>
+            </div>
+
+            <!-- 步骤2: 特定邮箱注册表单 -->
+            <div class="step-view" id="stepDomain">
+                <form onsubmit="handleDomainRegister(event)">
+                    <div class="form-group">
+                        <label id="labelDomainEmail">Email</label>
+                        <input type="email" id="domainEmail" class="form-input" required oninput="validateEmailDomain()">
+                        <div class="input-hint" id="domainEmailHint"></div>
+                        <div class="allowed-domains" id="allowedDomainsInfo"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelVerificationCode">Verification Code</label>
+                        <div class="code-input-row">
+                            <input type="text" id="verificationCode" class="form-input" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required>
+                            <button type="button" class="send-code-btn" id="sendCodeBtn" onclick="sendVerificationCode()">Send Code</button>
+                        </div>
+                        <div class="input-hint" id="verificationCodeHint"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelDomainUsername">Username</label>
+                        <input type="text" id="domainUsername" class="form-input" pattern="^[a-zA-Z0-9_]{3,50}$" required>
+                        <div class="input-hint" id="domainUsernameHint"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelDomainPassword">Password</label>
+                        <input type="password" id="domainPassword" class="form-input" minlength="8" required>
+                        <div class="input-hint" id="domainPasswordHint"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="labelDomainConfirmPassword">Confirm Password</label>
+                        <input type="password" id="domainConfirmPassword" class="form-input" required>
+                    </div>
+
+                    <button type="submit" class="btn" id="domainRegisterBtn">Create Account</button>
+                    <button type="button" class="btn btn-secondary" style="margin-top: 12px;" onclick="goBack()" id="backBtn2">Back</button>
+                </form>
+            </div>
+
+            <div class="links">
+                <span id="hasAccountText">Already have an account?</span>
+                <a href="login.html" id="signInLink">Sign in</a>
+            </div>
+
+            <div class="footer-links">
+                <a href="../index.html" id="backToPortalLink">Back to Portal</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="../config.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // 获取允许的邮箱域名列表
+        function getAllowedDomains() {
+            return (window.APP_CONFIG && window.APP_CONFIG.ALLOWED_EMAIL_DOMAINS) || [];
+        }
+
+        function hasDomainOption() {
+            return getAllowedDomains().length > 0;
+        }
+
+        // 切换步骤
+        function showStep(step) {
+            document.querySelectorAll('.step-view').forEach(el => el.classList.remove('active'));
+            document.getElementById(step).classList.add('active');
+            hideMessages();
+        }
+
+        function chooseMethod(method) {
+            if (method === 'invite') {
+                showStep('stepInvite');
+            } else {
+                updateAllowedDomainsInfo();
+                showStep('stepDomain');
+            }
+        }
+
+        function goBack() {
+            showStep('stepChoose');
+        }
+
+        // 更新允许的邮箱域名信息
+        function updateAllowedDomainsInfo() {
+            const domains = getAllowedDomains();
+            const info = document.getElementById('allowedDomainsInfo');
+            const isZh = I18n.getLang() === 'zh';
+            info.innerHTML = `<strong>${isZh ? '支持的邮箱后缀' : 'Allowed'}:</strong> ${domains.join(', ')}`;
+        }
+
+        // 验证邮箱域名
+        function validateEmailDomain() {
+            const email = document.getElementById('domainEmail').value.trim();
+            const hint = document.getElementById('domainEmailHint');
+            const input = document.getElementById('domainEmail');
+            const isZh = I18n.getLang() === 'zh';
+
+            if (!email || !email.includes('@')) {
+                hint.textContent = '';
+                hint.className = 'input-hint';
+                input.classList.remove('valid', 'invalid');
+                return false;
+            }
+
+            if (window.APP_CONFIG && window.APP_CONFIG.isEmailDomainAllowed(email)) {
+                hint.textContent = isZh ? '邮箱有效' : 'Valid';
+                hint.className = 'input-hint success';
+                input.classList.add('valid');
+                input.classList.remove('invalid');
+                return true;
+            } else {
+                hint.textContent = isZh ? '此邮箱域名不被允许' : 'Domain not allowed';
+                hint.className = 'input-hint error';
+                input.classList.add('invalid');
+                input.classList.remove('valid');
+                return false;
+            }
+        }
+
+        // 应用语言
+        function applyLanguage() {
+            const t = (cat, key) => I18n.t(cat, key);
+            const isZh = I18n.getLang() === 'zh';
+
+            document.getElementById('titleText').textContent = t('auth', 'createAccount');
+            document.getElementById('subtitleText').textContent = isZh ? '选择注册方式' : 'Choose how to register';
+
+            // 选择卡片
+            document.getElementById('methodInviteTitle').textContent = isZh ? '邀请码注册' : 'Invite Code';
+            document.getElementById('methodInviteDesc').textContent = isZh ? '使用邀请码注册账号' : 'Register with an invite code';
+            document.getElementById('methodDomainTitle').textContent = isZh ? '指定邮箱注册' : 'Allowed Email';
+            document.getElementById('methodDomainDesc').textContent = isZh ? '使用指定域名的邮箱直接注册' : 'Register with allowed email domains';
+
+            // 邀请码表单
+            document.getElementById('labelInviteCode').textContent = t('auth', 'inviteCode');
+            document.getElementById('labelInviteEmail').textContent = t('auth', 'email');
+            document.getElementById('labelInviteUsername').textContent = t('auth', 'username');
+            document.getElementById('inviteUsernameHint').textContent = t('auth', 'usernameHint');
+            document.getElementById('labelInvitePassword').textContent = t('auth', 'password');
+            document.getElementById('invitePasswordHint').textContent = t('auth', 'passwordHint');
+            document.getElementById('labelInviteConfirmPassword').textContent = t('auth', 'confirmPassword');
+            document.getElementById('inviteRegisterBtn').textContent = t('auth', 'createAccount');
+
+            // 邮箱表单
+            document.getElementById('labelDomainEmail').textContent = t('auth', 'email');
+            document.getElementById('labelVerificationCode').textContent = isZh ? '验证码' : 'Verification Code';
+            document.getElementById('sendCodeBtn').textContent = isZh ? '发送验证码' : 'Send Code';
+            document.getElementById('labelDomainUsername').textContent = t('auth', 'username');
+            document.getElementById('domainUsernameHint').textContent = t('auth', 'usernameHint');
+            document.getElementById('labelDomainPassword').textContent = t('auth', 'password');
+            document.getElementById('domainPasswordHint').textContent = t('auth', 'passwordHint');
+            document.getElementById('labelDomainConfirmPassword').textContent = t('auth', 'confirmPassword');
+            document.getElementById('domainRegisterBtn').textContent = t('auth', 'createAccount');
+
+            // 返回按钮
+            const backText = t('common', 'back');
+            document.getElementById('backBtn1').textContent = backText;
+            document.getElementById('backBtn2').textContent = backText;
+
+            // 其他
+            document.getElementById('hasAccountText').textContent = t('auth', 'hasAccount');
+            document.getElementById('signInLink').textContent = t('common', 'login');
+            document.getElementById('backToPortalLink').textContent = t('auth', 'backToPortal');
+            document.getElementById('langSwitcher').textContent = isZh ? 'EN' : '中';
+
+            document.title = t('common', 'register') + ' - Auth';
+        }
+
+        function switchLanguage() {
+            I18n.toggleLang();
+            applyLanguage();
+        }
+
+        if (AuthClient.isAuthenticated()) {
+            window.location.href = '../index.html';
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            document.getElementById('successMsg').classList.remove('show');
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMsg').classList.remove('show');
+            document.getElementById('successMsg').classList.remove('show');
+        }
+
+        function validatePasswords(password, confirmPassword) {
+            if (password !== confirmPassword) {
+                showError(I18n.t('auth', 'passwordMismatch'));
+                return false;
+            }
+            if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+                showError(I18n.t('auth', 'passwordWeak'));
+                return false;
+            }
+            return true;
+        }
+
+        async function handleInviteRegister(e) {
+            e.preventDefault();
+            hideMessages();
+
+            const inviteCode = document.getElementById('inviteCode').value.trim();
+            const email = document.getElementById('inviteEmail').value.trim();
+            const username = document.getElementById('inviteUsername').value.trim();
+            const password = document.getElementById('invitePassword').value;
+            const confirmPassword = document.getElementById('inviteConfirmPassword').value;
+            const btn = document.getElementById('inviteRegisterBtn');
+            const originalText = btn.textContent;
+
+            if (!validatePasswords(password, confirmPassword)) return;
+
+            btn.disabled = true;
+            btn.textContent = I18n.t('auth', 'creatingAccount');
+
+            try {
+                const codeResult = await AuthClient.validateInviteCode(inviteCode);
+                if (!codeResult.valid) {
+                    document.getElementById('inviteCode').classList.add('invalid');
+                    document.getElementById('codeHint').textContent = codeResult.message;
+                    document.getElementById('codeHint').className = 'input-hint error';
+                    return;
+                }
+
+                await AuthClient.register(email, username, password, inviteCode);
+                showSuccess(I18n.t('auth', 'accountCreated'));
+                setTimeout(() => { window.location.href = '../index.html'; }, 1500);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        async function handleDomainRegister(e) {
+            e.preventDefault();
+            hideMessages();
+
+            const email = document.getElementById('domainEmail').value.trim();
+            const verificationCode = document.getElementById('verificationCode').value.trim();
+            const username = document.getElementById('domainUsername').value.trim();
+            const password = document.getElementById('domainPassword').value;
+            const confirmPassword = document.getElementById('domainConfirmPassword').value;
+            const btn = document.getElementById('domainRegisterBtn');
+            const originalText = btn.textContent;
+            const isZh = I18n.getLang() === 'zh';
+
+            if (!validateEmailDomain()) {
+                showError(isZh ? '请使用允许的邮箱域名' : 'Please use an allowed email domain');
+                return;
+            }
+
+            if (!verificationCode || verificationCode.length !== 6) {
+                showError(isZh ? '请输入6位验证码' : 'Please enter 6-digit verification code');
+                return;
+            }
+
+            if (!validatePasswords(password, confirmPassword)) return;
+
+            btn.disabled = true;
+            btn.textContent = I18n.t('auth', 'creatingAccount');
+
+            try {
+                await AuthClient.registerWithVerification(email, username, password, verificationCode);
+                showSuccess(I18n.t('auth', 'accountCreated'));
+                setTimeout(() => { window.location.href = '../index.html'; }, 1500);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        // 发送验证码
+        let countdownTimer = null;
+        let countdown = 0;
+
+        async function sendVerificationCode() {
+            const email = document.getElementById('domainEmail').value.trim();
+            const btn = document.getElementById('sendCodeBtn');
+            const hint = document.getElementById('verificationCodeHint');
+            const isZh = I18n.getLang() === 'zh';
+
+            // 验证邮箱
+            if (!validateEmailDomain()) {
+                showError(isZh ? '请先输入有效的邮箱地址' : 'Please enter a valid email first');
+                return;
+            }
+
+            // 防止重复点击
+            if (countdown > 0) return;
+
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = isZh ? '发送中...' : 'Sending...';
+
+            try {
+                const result = await AuthClient.sendVerificationCode(email);
+                hint.textContent = result.message;
+                hint.className = 'input-hint success';
+
+                // 开始倒计时
+                countdown = 60;
+                btn.classList.add('countdown');
+                updateCountdown();
+                countdownTimer = setInterval(updateCountdown, 1000);
+            } catch (err) {
+                hint.textContent = err.message;
+                hint.className = 'input-hint error';
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        function updateCountdown() {
+            const btn = document.getElementById('sendCodeBtn');
+            const isZh = I18n.getLang() === 'zh';
+
+            if (countdown > 0) {
+                btn.textContent = `${countdown}s`;
+                btn.disabled = true;
+                countdown--;
+            } else {
+                clearInterval(countdownTimer);
+                btn.textContent = isZh ? '重新发送' : 'Resend';
+                btn.disabled = false;
+                btn.classList.remove('countdown');
+            }
+        }
+
+        // 初始化
+        function init() {
+            applyLanguage();
+            // 如果没有配置特定邮箱域名，隐藏该选项
+            if (!hasDomainOption()) {
+                document.getElementById('methodDomainCard').style.display = 'none';
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

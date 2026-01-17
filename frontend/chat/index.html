@@ -1,0 +1,2078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Chat</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --border-light: #3d444d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #f0b429;
+            --accent-hover: #e5a820;
+            --accent-subtle: rgba(240, 180, 41, 0.15);
+            --success: #3fb950;
+            --warning: #d29922;
+            --danger: #f85149;
+            --radius: 10px;
+            --radius-sm: 6px;
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+        }
+
+        .sidebar-header h1::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px 16px;
+            margin-top: 16px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .chat-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .chat-item {
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid transparent;
+        }
+
+        .chat-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .chat-item.active {
+            background: var(--accent-subtle);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .settings-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* 主聊天区域 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: var(--bg-primary);
+        }
+
+        .chat-header {
+            padding: 16px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .model-selector {
+            display: none;
+        }
+
+        /* 模型按钮 */
+        .model-emoji-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .model-emoji-btn:hover {
+            background: var(--accent-subtle);
+            border-color: var(--accent);
+        }
+
+        .model-emoji-btn .model-name-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .model-emoji-btn:hover .model-name-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 模型选择弹窗 */
+        .model-picker {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 8px;
+            margin-bottom: 8px;
+            box-shadow: var(--shadow);
+            display: none;
+            z-index: 100;
+            min-width: 200px;
+        }
+
+        .model-picker.show {
+            display: block;
+        }
+
+        .model-picker-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .model-picker-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .model-picker-item.active {
+            background: var(--accent-subtle);
+            color: var(--accent);
+        }
+
+        .model-picker-item .emoji {
+            font-size: 18px;
+        }
+
+        .model-picker-item .name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .chat-header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-btn {
+            padding: 8px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: var(--accent-subtle);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* 聊天消息区域 */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .chat-messages {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .message-row {
+            display: flex;
+            gap: 16px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-row.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .avatar.ai {
+            background: var(--accent);
+            border: none;
+            color: #000;
+            font-weight: 700;
+        }
+
+        .message-content {
+            display: flex;
+            flex-direction: column;
+            max-width: 75%;
+            gap: 6px;
+        }
+
+        .message-row.user .message-content {
+            align-items: flex-end;
+        }
+
+        .bubble {
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.7;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message-row.user .bubble {
+            background: var(--accent);
+            color: #000;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-row.ai .bubble {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin: 0 4px;
+        }
+
+        /* 附件预览 */
+        .message-attachments {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .attachment-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s;
+        }
+
+        .attachment-preview:hover {
+            transform: scale(1.02);
+        }
+
+        .file-attachment {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        /* AI生成的图片 */
+        .ai-image {
+            max-width: 400px;
+            max-height: 400px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            margin: 8px 0;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+
+        .ai-image:hover {
+            transform: scale(1.02);
+        }
+
+        /* 加载动画 */
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            padding: 14px 18px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
+
+        /* 错误消息 */
+        .error-message {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+        }
+
+        /* 底部输入区 */
+        .input-area {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 16px 24px;
+            flex-shrink: 0;
+        }
+
+        .input-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .uploaded-files-container {
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .uploaded-files-container.has-files {
+            display: block;
+        }
+
+        .uploaded-files {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .file-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-primary);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .file-tag .file-name {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-tag .remove-file {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--danger);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+
+        .file-tag .remove-file:hover {
+            transform: scale(1.1);
+        }
+
+        .file-tag.uploading {
+            opacity: 0.6;
+        }
+
+        .file-tag.uploading .file-name::after {
+            content: ' ...';
+            color: var(--text-muted);
+        }
+
+        .file-tag .preview-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .upload-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .upload-btn:hover {
+            background: var(--accent-subtle);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .upload-btn.has-files {
+            background: var(--accent-subtle);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 22px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 14px;
+            resize: none;
+            min-height: 44px;
+            max-height: 150px;
+            outline: none;
+            font-family: inherit;
+            line-height: 1.5;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-wrapper textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-subtle);
+        }
+
+        .input-wrapper textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent);
+            color: #000;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 开关样式 */
+        .switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-primary);
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+            background-color: #000;
+        }
+
+        /* 欢迎界面 */
+        .welcome-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--accent);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 24px;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .welcome-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 40px;
+            max-width: 600px;
+        }
+
+        .feature-item {
+            padding: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: 0 4px 16px rgba(240, 180, 41, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .feature-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* 图片查看器 */
+        .image-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: zoom-out;
+        }
+
+        .image-viewer.show {
+            display: flex;
+        }
+
+        .image-viewer img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: var(--radius);
+        }
+
+        .image-viewer-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .image-viewer-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                height: 100%;
+                z-index: 100;
+            }
+
+            .sidebar.show {
+                left: 0;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+        }
+
+        /* 通知动画 */
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 引入全局配置 -->
+    <script src="../config.js"></script>
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h1>Gemini Chat</h1>
+            <button class="new-chat-btn" onclick="createNewChat()" id="btnNewChat">
+                <span>+</span> New Chat
+            </button>
+        </div>
+        <div class="chat-list" id="chatList">
+            <!-- 对话列表动态生成 -->
+        </div>
+        <div class="sidebar-footer">
+            <div class="settings-row">
+                <span class="settings-label">Stream Output</span>
+                <label class="switch">
+                    <input type="checkbox" id="streamMode" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="settings-row">
+                <button class="header-btn" style="width: 100%; justify-content: center;" onclick="loadConversations()">
+                    Refresh List
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <header class="chat-header">
+            <div class="chat-header-left">
+                <button class="header-btn" id="menuBtn" onclick="toggleSidebar()" style="display: none;">
+                    <span style="font-size: 18px;">&#9776;</span>
+                </button>
+                <div class="model-selector">
+                    <select id="modelSelect">
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    </select>
+                </div>
+            </div>
+            <div class="chat-header-right">
+                <button class="header-btn" onclick="switchLanguage()" id="langSwitcher">EN</button>
+                <button class="header-btn" onclick="clearCurrentChat()" id="btnClear">
+                    Clear
+                </button>
+                <button class="header-btn" onclick="safeNavigate('../index.html')" id="btnPortal">
+                    Portal
+                </button>
+            </div>
+        </header>
+
+        <!-- 欢迎界面 -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <div class="welcome-icon">G</div>
+            <h2 class="welcome-title">Gemini Business Chat</h2>
+            <p class="welcome-subtitle">
+                Intelligent assistant with image upload, image generation, and streaming conversations
+            </p>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">&#128172;</div>
+                    <div class="feature-title">Smart Chat</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">&#128247;</div>
+                    <div class="feature-title">Image Upload</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">&#127912;</div>
+                    <div class="feature-title">Image Gen</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 聊天消息区域 -->
+        <div class="chat-container" id="chatContainer" style="display: none;">
+            <div class="chat-messages" id="chatMessages">
+                <!-- 消息动态生成 -->
+            </div>
+        </div>
+
+        <!-- 底部输入区 -->
+        <div class="input-area">
+            <div class="input-container">
+                <div class="uploaded-files-container" id="uploadedFilesContainer">
+                    <div class="uploaded-files" id="uploadedFiles">
+                        <!-- 已上传文件标签 -->
+                    </div>
+                </div>
+                <div class="input-wrapper">
+                    <input type="file" id="fileInput" multiple accept="image/*,.pdf,.txt,.doc,.docx">
+                    <button class="upload-btn" id="uploadBtn" onclick="document.getElementById('fileInput').click()" title="Upload files">
+                        &#128206;
+                    </button>
+                    <div style="position: relative;">
+                        <button class="model-emoji-btn" id="modelEmojiBtn" onclick="toggleModelPicker()" title="Select model">
+                            <span id="currentModelEmoji">&#9889;</span>
+                            <span class="model-name-tooltip" id="currentModelName">Gemini 2.5 Flash</span>
+                        </button>
+                        <div class="model-picker" id="modelPicker">
+                            <!-- 动态生成 -->
+                        </div>
+                    </div>
+                    <textarea id="userInput" placeholder="Type a message..." rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize(this)"></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">
+                        &#10148;
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 图片查看器 -->
+    <div class="image-viewer" id="imageViewer" onclick="closeImageViewer()">
+        <button class="image-viewer-close">&times;</button>
+        <img id="viewerImage" src="" alt="Preview">
+    </div>
+
+    <script src="../auth/i18n.js"></script>
+    <script src="../auth/auth.js"></script>
+    <script>
+        // 首先检查是否通过共享认证系统登录
+        (async function checkSharedAuth() {
+            if (!AuthClient.isAuthenticated()) {
+                AuthClient.redirectToLogin();
+                return;
+            }
+            try {
+                await AuthClient.getMe();
+            } catch (e) {
+                AuthClient.redirectToLogin();
+            }
+        })();
+
+        // 初始化 i18n
+        I18n.init();
+
+        // 应用语言
+        function applyLanguage() {
+            const t = (cat, key) => I18n.t(cat, key);
+            document.getElementById('langSwitcher').textContent = I18n.getLang() === 'zh' ? 'EN' : '中';
+            document.getElementById('btnClear').textContent = t('chat', 'clear') || 'Clear';
+            document.getElementById('btnPortal').textContent = t('ggm', 'portal') || 'Portal';
+            document.getElementById('btnNewChat').textContent = t('chat', 'newChat') || 'New Chat';
+        }
+
+        // 切换语言
+        function switchLanguage() {
+            I18n.toggleLang();
+            applyLanguage();
+        }
+
+        // 页面加载时应用语言
+        document.addEventListener('DOMContentLoaded', applyLanguage);
+
+        // API 基础地址配置（从全局配置读取，空字符串表示使用相对路径）
+        const API_BASE = window.APP_CONFIG ? window.APP_CONFIG.getGGMApi() : 'http://localhost:8000';
+
+        // 模型emoji映射
+        const MODEL_EMOJIS = {
+            'gemini-2.5-flash': { emoji: '\u26A1', name: 'Gemini 2.5 Flash' },
+            'gemini-2.5-pro': { emoji: '\u2728', name: 'Gemini 2.5 Pro' },
+            'gemini-2.0-flash': { emoji: '\u26A1', name: 'Gemini 2.0 Flash' },
+            'gemini-2.0-pro': { emoji: '\u2728', name: 'Gemini 2.0 Pro' },
+            'gemini-3-pro': { emoji: '\uD83D\uDE80', name: 'Gemini 3 Pro' },
+            'gemini-3-pro-image': { emoji: '\uD83C\uDFA8', name: 'Gemini 3 Pro Image' },
+            'gemini-exp': { emoji: '\uD83E\uDDEA', name: 'Gemini Experimental' },
+            'nano-banana': { emoji: '\uD83C\uDF4C', name: 'Nano Banana' },
+            'imagen': { emoji: '\uD83D\uDDBC\uFE0F', name: 'Imagen' },
+        };
+
+        function getModelEmoji(modelId) {
+            if (MODEL_EMOJIS[modelId]) {
+                return MODEL_EMOJIS[modelId];
+            }
+            const lowerModelId = modelId.toLowerCase();
+            if (lowerModelId.includes('flash')) return { emoji: '\u26A1', name: modelId };
+            if (lowerModelId.includes('pro')) return { emoji: '\u2728', name: modelId };
+            if (lowerModelId.includes('image') || lowerModelId.includes('imagen')) return { emoji: '\uD83C\uDFA8', name: modelId };
+            if (lowerModelId.includes('exp')) return { emoji: '\uD83E\uDDEA', name: modelId };
+            return { emoji: '\uD83E\uDD16', name: modelId };
+        }
+
+        // 全局状态
+        let conversations = [];
+        let currentConversationId = null;
+        let isLoading = false;
+        let uploadedFiles = [];
+        let abortController = null;
+        let pendingAiContent = '';
+        let uploadingCount = 0;
+        let currentModel = 'gemini-2.5-flash';
+        let availableModels = [];
+
+        // 获取认证 Token（优先使用用户 JWT，否则使用 API Token）
+        function getAuthToken() {
+            // 优先使用 auth 服务的用户 JWT
+            const userToken = localStorage.getItem('auth_access_token');
+            if (userToken) {
+                return userToken;
+            }
+            // 其次使用 API Token
+            const apiToken = localStorage.getItem('api_token');
+            if (apiToken) {
+                return apiToken;
+            }
+            // 默认值（仅用于开发测试）
+            return '88888888';
+        }
+
+        document.addEventListener('visibilitychange', async () => {
+            if (!document.hidden && currentConversationId) {
+                const conv = getCurrentConversation();
+                if (conv && conv.serverConversationId) {
+                    loadConversationMessages(conv.serverConversationId).catch(console.error);
+                }
+            }
+        });
+
+        window.addEventListener('beforeunload', (e) => {
+            if (isLoading) {
+                savePendingResponse();
+            }
+        });
+
+        async function safeNavigate(url) {
+            if (isLoading) {
+                const confirmed = confirm('Response is being generated but will continue in the background. Leave now?');
+                if (!confirmed) return;
+                if (currentConversationId) {
+                    localStorage.setItem('background_generation_' + currentConversationId, Date.now().toString());
+                }
+            }
+            window.location.href = url;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'var(--success)' : 'var(--danger)';
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 24px;
+                padding: 12px 20px;
+                background: ${bgColor};
+                color: white;
+                border-radius: 8px;
+                box-shadow: var(--shadow);
+                font-size: 14px;
+                z-index: 1000;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function savePendingResponse() {
+            if (pendingAiContent && currentConversationId) {
+                const conv = getCurrentConversation();
+                if (conv && pendingAiContent.trim()) {
+                    conv.messages.push({
+                        role: 'ai',
+                        content: pendingAiContent + '\n\n[Response interrupted]',
+                        time: new Date().toISOString()
+                    });
+                }
+                pendingAiContent = '';
+            }
+        }
+
+        window.onload = () => {
+            loadModelList();
+            loadConversations();
+            setupFileUpload();
+            checkResponsive();
+            window.addEventListener('resize', checkResponsive);
+        };
+
+        function checkResponsive() {
+            const menuBtn = document.getElementById('menuBtn');
+            if (window.innerWidth <= 768) {
+                menuBtn.style.display = 'flex';
+            } else {
+                menuBtn.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('show');
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        async function loadModelList() {
+            try {
+                const token = getAuthToken();
+                const response = await fetch(API_BASE + '/v1/models', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Failed to load models');
+                const data = await response.json();
+                const models = data.data || [];
+
+                const select = document.getElementById('modelSelect');
+                select.innerHTML = '';
+
+                if (models.length === 0) {
+                    select.innerHTML = '<option value="gemini-2.5-flash">Gemini 2.5 Flash</option>';
+                    availableModels = [{ id: 'gemini-2.5-flash' }];
+                } else {
+                    availableModels = models;
+                    models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.id;
+                        option.textContent = model.id;
+                        select.appendChild(option);
+                    });
+                }
+
+                const savedModel = localStorage.getItem('selected_model');
+                if (savedModel && availableModels.find(m => m.id === savedModel)) {
+                    currentModel = savedModel;
+                    select.value = savedModel;
+                } else if (availableModels.length > 0) {
+                    currentModel = availableModels[0].id;
+                    select.value = currentModel;
+                }
+
+                updateModelEmojiDisplay();
+                renderModelPicker();
+
+            } catch (error) {
+                console.error('Failed to load models:', error);
+                availableModels = [{ id: 'gemini-2.5-flash' }];
+                currentModel = 'gemini-2.5-flash';
+                updateModelEmojiDisplay();
+                renderModelPicker();
+            }
+        }
+
+        function updateModelEmojiDisplay() {
+            const modelInfo = getModelEmoji(currentModel);
+            document.getElementById('currentModelEmoji').innerHTML = modelInfo.emoji;
+            document.getElementById('currentModelName').textContent = modelInfo.name;
+        }
+
+        function renderModelPicker() {
+            const picker = document.getElementById('modelPicker');
+            picker.innerHTML = availableModels.map(model => {
+                const info = getModelEmoji(model.id);
+                const isActive = model.id === currentModel ? 'active' : '';
+                return `
+                    <div class="model-picker-item ${isActive}" onclick="selectModel('${model.id}')">
+                        <span class="emoji">${info.emoji}</span>
+                        <span class="name">${info.name}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleModelPicker() {
+            const picker = document.getElementById('modelPicker');
+            picker.classList.toggle('show');
+        }
+
+        function selectModel(modelId) {
+            currentModel = modelId;
+            localStorage.setItem('selected_model', modelId);
+            document.getElementById('modelSelect').value = modelId;
+            updateModelEmojiDisplay();
+            renderModelPicker();
+            toggleModelPicker();
+        }
+
+        document.addEventListener('click', (e) => {
+            const picker = document.getElementById('modelPicker');
+            const btn = document.getElementById('modelEmojiBtn');
+            if (picker && btn && !picker.contains(e.target) && !btn.contains(e.target)) {
+                picker.classList.remove('show');
+            }
+        });
+
+        async function loadConversations() {
+            try {
+                const token = getAuthToken();
+                const response = await fetch(API_BASE + '/api/conversations', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-Client-Type': 'web'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load conversations');
+                }
+
+                const serverConvs = await response.json();
+
+                conversations = serverConvs.map(conv => ({
+                    id: conv.id,
+                    serverConversationId: conv.id,
+                    title: conv.name || 'New Chat',
+                    messages: [],
+                    createdAt: conv.created_at,
+                    messageCount: conv.message_count
+                }));
+
+                conversations.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            } catch (e) {
+                console.error('Failed to load conversations:', e);
+                conversations = [];
+            }
+
+            renderConversationList();
+        }
+
+        function saveConversations() {}
+
+        function renderConversationList() {
+            const list = document.getElementById('chatList');
+            if (conversations.length === 0) {
+                list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">No conversations</div>';
+                return;
+            }
+
+            list.innerHTML = conversations.map(conv => `
+                <div class="chat-item ${conv.id === currentConversationId ? 'active' : ''}"
+                     onclick="selectConversation('${conv.id}')">
+                    <span>&#128172;</span>
+                    <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        ${conv.title || 'New Chat'}
+                    </span>
+                    <button onclick="event.stopPropagation(); deleteConversation('${conv.id}')"
+                            style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;">
+                        &times;
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function createNewChat() {
+            if (isLoading) {
+                if (!confirm('Response is being generated. Create new chat anyway?')) return;
+                if (abortController) {
+                    abortController.abort();
+                }
+                setLoading(false);
+            }
+
+            const tempId = 'temp_' + Date.now();
+            const newConv = {
+                id: tempId,
+                serverConversationId: null,
+                title: 'New Chat',
+                messages: [],
+                createdAt: new Date().toISOString()
+            };
+            conversations.unshift(newConv);
+            selectConversation(tempId);
+            renderConversationList();
+        }
+
+        function selectConversation(id) {
+            if (isLoading && currentConversationId && currentConversationId !== id) {
+                if (!confirm('Response is being generated. Switch anyway?')) return;
+                if (abortController) {
+                    abortController.abort();
+                }
+                setLoading(false);
+            }
+
+            currentConversationId = id;
+            renderConversationList();
+            renderCurrentChat();
+
+            const conv = getCurrentConversation();
+            if (conv && conv.serverConversationId && conv.messages.length === 0) {
+                loadConversationMessages(conv.serverConversationId).catch(console.error);
+            }
+
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('chatContainer').style.display = 'block';
+
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('show');
+            }
+        }
+
+        async function loadConversationMessages(serverConvId) {
+            try {
+                const token = getAuthToken();
+                const response = await fetch(`${API_BASE}/api/conversations/${serverConvId}/messages?limit=100`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-Client-Type': 'web'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to load messages');
+                    return;
+                }
+
+                const data = await response.json();
+                const conv = conversations.find(c => c.serverConversationId === serverConvId);
+                if (conv && data.messages) {
+                    conv.messages = data.messages.map(msg => ({
+                        role: msg.role === 'assistant' ? 'ai' : msg.role,
+                        content: msg.content,
+                        time: new Date(msg.timestamp * 1000).toISOString(),
+                        attachments: msg.images ? msg.images.map(img => ({
+                            name: img,
+                            isImage: true
+                        })) : []
+                    }));
+
+                    if (currentConversationId === conv.id) {
+                        renderCurrentChat();
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load messages:', e);
+            }
+        }
+
+        async function deleteConversation(id) {
+            if (id === currentConversationId && isLoading) {
+                if (!confirm('Response is being generated. Delete this conversation anyway?')) return;
+                if (abortController) {
+                    abortController.abort();
+                }
+                setLoading(false);
+                pendingAiContent = '';
+            } else {
+                if (!confirm('Delete this conversation?')) return;
+            }
+
+            const conv = conversations.find(c => c.id === id);
+
+            if (conv && conv.serverConversationId) {
+                try {
+                    const token = getAuthToken();
+                    await fetch(`${API_BASE}/api/conversations/${conv.serverConversationId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'X-Client-Type': 'web'
+                        }
+                    });
+                } catch (e) {
+                    console.error('Failed to delete server conversation:', e);
+                }
+            }
+
+            conversations = conversations.filter(c => c.id !== id);
+
+            if (currentConversationId === id) {
+                currentConversationId = null;
+                document.getElementById('welcomeScreen').style.display = 'flex';
+                document.getElementById('chatContainer').style.display = 'none';
+            }
+            renderConversationList();
+        }
+
+        async function clearCurrentChat() {
+            if (!currentConversationId) return;
+
+            if (isLoading) {
+                if (!confirm('Response is being generated. Clear current chat anyway?')) return;
+                if (abortController) {
+                    abortController.abort();
+                }
+                setLoading(false);
+                pendingAiContent = '';
+            } else {
+                if (!confirm('Clear current chat?')) return;
+            }
+
+            const conv = conversations.find(c => c.id === currentConversationId);
+            if (conv) {
+                if (conv.serverConversationId) {
+                    try {
+                        const token = getAuthToken();
+                        await fetch(`${API_BASE}/api/conversations/${conv.serverConversationId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'X-Client-Type': 'web'
+                            }
+                        });
+                    } catch (e) {
+                        console.error('Failed to delete server conversation:', e);
+                    }
+                }
+
+                conv.messages = [];
+                conv.title = 'New Chat';
+                conv.serverConversationId = null;
+                renderCurrentChat();
+            }
+        }
+
+        function getCurrentConversation() {
+            return conversations.find(c => c.id === currentConversationId);
+        }
+
+        function renderCurrentChat() {
+            const conv = getCurrentConversation();
+            const container = document.getElementById('chatMessages');
+
+            if (!conv || conv.messages.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = conv.messages.map(msg => createMessageHTML(msg)).join('');
+            scrollToBottom();
+        }
+
+        function createMessageHTML(msg) {
+            const time = new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const isUser = msg.role === 'user';
+
+            let attachmentsHTML = '';
+            if (msg.attachments && msg.attachments.length > 0) {
+                attachmentsHTML = '<div class="message-attachments">';
+                for (const att of msg.attachments) {
+                    if (att.isImage && att.previewUrl) {
+                        attachmentsHTML += `<img src="${att.previewUrl}" class="attachment-preview" onclick="openImageViewer('${att.previewUrl}')" alt="${att.name}">`;
+                    } else {
+                        attachmentsHTML += `<div class="file-attachment"><span>&#128196;</span><span>${att.name}</span></div>`;
+                    }
+                }
+                attachmentsHTML += '</div>';
+            }
+
+            const contentHTML = isUser ? escapeHtml(msg.content) : parseAIContent(msg.content);
+
+            return `
+                <div class="message-row ${isUser ? 'user' : 'ai'}">
+                    <div class="avatar ${isUser ? '' : 'ai'}">${isUser ? '&#128100;' : 'G'}</div>
+                    <div class="message-content">
+                        ${attachmentsHTML}
+                        <div class="bubble">${contentHTML}</div>
+                        <div class="timestamp">${time}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function parseAIContent(content) {
+            const mdImageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+            const imageUrlRegex = /(https?:\/\/[^\s<>"]+\.(?:png|jpg|jpeg|gif|webp))|(\/images\/[^\s<>"]+\.(?:png|jpg|jpeg|gif|webp))/gi;
+
+            // 将相对路径转换为完整URL（针对后端图片）
+            function toFullImageUrl(url) {
+                if (url.startsWith('/images/')) {
+                    return API_BASE + url;
+                }
+                return url;
+            }
+
+            let processed = content.replace(mdImageRegex, (match, alt, url) => {
+                const fullUrl = toFullImageUrl(url);
+                return `<img src="${escapeHtml(fullUrl)}" class="ai-image" onclick="openImageViewer('${escapeHtml(fullUrl)}')" alt="${escapeHtml(alt || 'AI Generated Image')}" onerror="this.onerror=null;this.outerHTML='<a href=\\'${escapeHtml(fullUrl)}\\' target=\\'_blank\\'>${escapeHtml(fullUrl)}</a>'">`;
+            });
+
+            const lines = processed.split('\n');
+
+            return lines.map(line => {
+                if (line.includes('<img ')) {
+                    return line;
+                }
+                const trimmed = line.trim();
+                if (imageUrlRegex.test(trimmed)) {
+                    imageUrlRegex.lastIndex = 0;
+                    const match = trimmed.match(imageUrlRegex);
+                    if (match && match[0] === trimmed) {
+                        const fullUrl = toFullImageUrl(trimmed);
+                        return `<img src="${escapeHtml(fullUrl)}" class="ai-image" onclick="openImageViewer('${escapeHtml(fullUrl)}')" alt="AI Generated Image" onerror="this.onerror=null;this.outerHTML='<a href=\\'${escapeHtml(fullUrl)}\\' target=\\'_blank\\'>${escapeHtml(fullUrl)}</a>'">`;
+                    }
+                }
+                imageUrlRegex.lastIndex = 0;
+                return escapeHtml(line);
+            }).join('<br>');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function setupFileUpload() {
+            document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        }
+
+        async function handleFileSelect(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            for (const file of files) {
+                await uploadFile(file);
+            }
+            event.target.value = '';
+        }
+
+        async function uploadFile(file) {
+            const container = document.getElementById('uploadedFilesContainer');
+            const filesList = document.getElementById('uploadedFiles');
+
+            container.classList.add('has-files');
+
+            uploadingCount++;
+            updateSendBtnState();
+
+            const tagId = 'file-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+            const isImage = file.type.startsWith('image/');
+
+            let previewHTML = '<span>&#128196;</span>';
+            if (isImage) {
+                previewHTML = '<span style="font-size: 16px;">&#128247;</span>';
+            }
+
+            const fileTag = document.createElement('div');
+            fileTag.className = 'file-tag uploading';
+            fileTag.id = tagId;
+            fileTag.innerHTML = `
+                ${previewHTML}
+                <span class="file-name">${file.name}</span>
+            `;
+            filesList.appendChild(fileTag);
+
+            try {
+                const token = getAuthToken();
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('purpose', 'assistants');
+
+                const response = await fetch(API_BASE + '/v1/files', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || 'Upload failed');
+                }
+
+                const data = await response.json();
+
+                let previewUrl = null;
+                if (isImage) {
+                    previewUrl = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = e => resolve(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                }
+
+                fileTag.className = 'file-tag';
+                let imgPreview = previewHTML;
+                if (isImage && previewUrl) {
+                    imgPreview = `<img src="${previewUrl}" class="preview-img">`;
+                }
+                fileTag.innerHTML = `
+                    ${imgPreview}
+                    <span class="file-name">${file.name}</span>
+                    <button class="remove-file" onclick="removeFile('${tagId}')">&times;</button>
+                `;
+
+                uploadedFiles.push({
+                    tagId: tagId,
+                    id: data.id,
+                    name: file.name,
+                    isImage: isImage,
+                    previewUrl: previewUrl
+                });
+
+                updateUploadBtnState();
+
+            } catch (error) {
+                console.error('Upload failed:', error);
+                fileTag.remove();
+                alert('Upload failed: ' + error.message);
+
+                if (uploadedFiles.length === 0 && uploadingCount <= 1) {
+                    container.classList.remove('has-files');
+                }
+            } finally {
+                uploadingCount--;
+                updateSendBtnState();
+            }
+        }
+
+        function removeFile(tagId) {
+            const fileTag = document.getElementById(tagId);
+            if (fileTag) fileTag.remove();
+
+            const fileInfo = uploadedFiles.find(f => f.tagId === tagId);
+            uploadedFiles = uploadedFiles.filter(f => f.tagId !== tagId);
+
+            updateUploadBtnState();
+
+            if (uploadedFiles.length === 0) {
+                document.getElementById('uploadedFilesContainer').classList.remove('has-files');
+            }
+
+            if (fileInfo) {
+                const token = getAuthToken();
+                fetch(`${API_BASE}/v1/files/${fileInfo.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).catch(console.error);
+            }
+        }
+
+        function clearUploadedFiles() {
+            uploadedFiles = [];
+            document.getElementById('uploadedFiles').innerHTML = '';
+            document.getElementById('uploadedFilesContainer').classList.remove('has-files');
+            updateUploadBtnState();
+        }
+
+        function updateUploadBtnState() {
+            const btn = document.getElementById('uploadBtn');
+            if (uploadedFiles.length > 0) {
+                btn.classList.add('has-files');
+                btn.title = `${uploadedFiles.length} file(s) attached`;
+            } else {
+                btn.classList.remove('has-files');
+                btn.title = 'Upload files';
+            }
+        }
+
+        function updateSendBtnState() {
+            const sendBtn = document.getElementById('sendBtn');
+            const isUploading = uploadingCount > 0;
+
+            sendBtn.disabled = isUploading || isLoading;
+
+            if (isUploading) {
+                sendBtn.innerHTML = '&#8987;';
+                sendBtn.title = 'Uploading files...';
+            } else if (isLoading) {
+                sendBtn.innerHTML = '&#8987;';
+                sendBtn.title = 'Generating response...';
+            } else {
+                sendBtn.innerHTML = '&#10148;';
+                sendBtn.title = 'Send';
+            }
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                if (uploadingCount > 0) return;
+                sendMessage();
+            }
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+
+            if ((!text && uploadedFiles.length === 0) || isLoading || uploadingCount > 0) return;
+
+            if (!currentConversationId) {
+                createNewChat();
+            }
+
+            const conv = getCurrentConversation();
+            if (!conv) return;
+
+            const attachments = uploadedFiles.map(f => ({
+                name: f.name,
+                isImage: f.isImage,
+                previewUrl: f.previewUrl
+            }));
+
+            const userMsg = {
+                role: 'user',
+                content: text,
+                attachments: attachments,
+                time: new Date().toISOString()
+            };
+            conv.messages.push(userMsg);
+
+            if (conv.messages.length === 1 && text) {
+                conv.title = text.slice(0, 30) + (text.length > 30 ? '...' : '');
+                renderConversationList();
+            }
+
+            saveConversations();
+            renderCurrentChat();
+
+            input.value = '';
+            input.style.height = 'auto';
+            setLoading(true);
+
+            const isStream = document.getElementById('streamMode').checked;
+
+            try {
+                if (isStream) {
+                    await sendStreamRequest(text, conv);
+                } else {
+                    await sendNonStreamRequest(text, conv);
+                }
+            } catch (error) {
+                console.error('Request failed:', error);
+                if (error.name !== 'AbortError') {
+                    addErrorMessage(conv, 'Request failed: ' + error.message);
+                }
+            } finally {
+                setLoading(false);
+                clearUploadedFiles();
+            }
+        }
+
+        async function sendStreamRequest(text, conv) {
+            const typingId = showTypingIndicator();
+            let aiContent = '';
+            let aiMessageId = null;
+
+            pendingAiContent = '';
+
+            abortController = new AbortController();
+            const token = getAuthToken();
+
+            const response = await fetch(API_BASE + '/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-Client-Type': 'web'
+                },
+                body: JSON.stringify({
+                    model: currentModel,
+                    messages: buildMessages(conv, text),
+                    stream: true,
+                    conversation_id: conv.serverConversationId || null
+                }),
+                signal: abortController.signal
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || errorData.error || 'Request failed');
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6);
+                        if (data === '[DONE]') break;
+
+                        try {
+                            const parsed = JSON.parse(data);
+
+                            if (parsed.error) {
+                                removeTypingIndicator(typingId);
+                                throw new Error(parsed.error.message || 'Unknown error');
+                            }
+
+                            if (parsed.conversation_id && !conv.serverConversationId) {
+                                conv.serverConversationId = parsed.conversation_id;
+                                const oldId = conv.id;
+                                conv.id = parsed.conversation_id;
+                                if (currentConversationId === oldId) {
+                                    currentConversationId = conv.id;
+                                }
+                                renderConversationList();
+                            }
+
+                            const content = parsed.choices?.[0]?.delta?.content;
+                            if (content) {
+                                if (!aiMessageId) {
+                                    removeTypingIndicator(typingId);
+                                    aiMessageId = createStreamingBubble();
+                                }
+                                aiContent += content;
+                                pendingAiContent = aiContent;
+                                updateStreamingBubble(aiMessageId, aiContent);
+                            }
+                        } catch (e) {
+                            if (e.message && e.message !== 'Unknown error') {
+                                throw e;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!aiMessageId) {
+                removeTypingIndicator(typingId);
+            }
+
+            localStorage.removeItem('pending_response_' + conv.id);
+            pendingAiContent = '';
+
+            if (aiContent) {
+                conv.messages.push({
+                    role: 'ai',
+                    content: aiContent,
+                    time: new Date().toISOString()
+                });
+                saveConversations();
+            }
+        }
+
+        async function sendNonStreamRequest(text, conv) {
+            const typingId = showTypingIndicator();
+
+            abortController = new AbortController();
+            const token = getAuthToken();
+
+            const response = await fetch(API_BASE + '/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-Client-Type': 'web'
+                },
+                body: JSON.stringify({
+                    model: currentModel,
+                    messages: buildMessages(conv, text),
+                    stream: false,
+                    conversation_id: conv.serverConversationId || null
+                }),
+                signal: abortController.signal
+            });
+
+            removeTypingIndicator(typingId);
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || errorData.error || 'Request failed');
+            }
+
+            const data = await response.json();
+
+            if (data.conversation_id && !conv.serverConversationId) {
+                conv.serverConversationId = data.conversation_id;
+                const oldId = conv.id;
+                conv.id = data.conversation_id;
+                if (currentConversationId === oldId) {
+                    currentConversationId = conv.id;
+                }
+                renderConversationList();
+            }
+
+            const content = data.choices?.[0]?.message?.content;
+
+            if (content) {
+                conv.messages.push({
+                    role: 'ai',
+                    content: content,
+                    time: new Date().toISOString()
+                });
+                renderCurrentChat();
+            } else {
+                addErrorMessage(conv, 'No response received');
+            }
+        }
+
+        function buildMessages(conv, currentText) {
+            const messages = [];
+            const fileIds = uploadedFiles.map(f => f.id);
+            if (fileIds.length > 0) {
+                const contentParts = [];
+                for (const fileId of fileIds) {
+                    contentParts.push({ type: 'file', file: { id: fileId } });
+                }
+                contentParts.push({ type: 'text', text: currentText });
+                messages.push({ role: 'user', content: contentParts });
+            } else {
+                messages.push({ role: 'user', content: currentText });
+            }
+            return messages;
+        }
+
+        function setLoading(loading) {
+            isLoading = loading;
+            const input = document.getElementById('userInput');
+            input.disabled = loading;
+            updateSendBtnState();
+        }
+
+        function showTypingIndicator() {
+            const container = document.getElementById('chatMessages');
+            const id = 'typing-' + Date.now();
+
+            const html = `
+                <div class="message-row ai" id="${id}">
+                    <div class="avatar ai">G</div>
+                    <div class="message-content">
+                        <div class="typing-indicator">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function createStreamingBubble() {
+            const container = document.getElementById('chatMessages');
+            const id = 'ai-stream-' + Date.now();
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const html = `
+                <div class="message-row ai" id="${id}">
+                    <div class="avatar ai">G</div>
+                    <div class="message-content">
+                        <div class="bubble" id="${id}-bubble"></div>
+                        <div class="timestamp">${time}</div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+            return id;
+        }
+
+        function updateStreamingBubble(id, content) {
+            const bubble = document.getElementById(id + '-bubble');
+            if (bubble) {
+                bubble.innerHTML = parseAIContent(content);
+                scrollToBottom();
+            }
+        }
+
+        function addErrorMessage(conv, message) {
+            const container = document.getElementById('chatMessages');
+            const html = `
+                <div class="message-row ai">
+                    <div class="avatar ai" style="background: var(--danger);">!</div>
+                    <div class="message-content">
+                        <div class="error-message">${escapeHtml(message)}</div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chatContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function openImageViewer(url) {
+            document.getElementById('viewerImage').src = url;
+            document.getElementById('imageViewer').classList.add('show');
+        }
+
+        function closeImageViewer() {
+            document.getElementById('imageViewer').classList.remove('show');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeImageViewer();
+            }
+        });
+    </script>
+</body>
+</html>

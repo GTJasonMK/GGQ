@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #f0b429;
+            --accent-subtle: rgba(240, 180, 41, 0.15);
+            --success: #3fb950;
+            --danger: #f85149;
+            --radius: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .back-btn {
+            padding: 8px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--accent-subtle);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .welcome {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .welcome h2 {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .welcome p {
+            color: var(--text-secondary);
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .nav-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 28px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s;
+        }
+
+        .nav-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-card-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--accent-subtle);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        .nav-card h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .nav-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <h1 id="pageTitle">Admin Dashboard</h1>
+            <a href="../index.html" class="back-btn" id="linkPortal">Portal</a>
+            <button class="back-btn" onclick="switchLanguage()" id="langSwitcher">EN</button>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="welcome">
+                <h2 id="welcomeTitle">Admin Panel</h2>
+                <p id="welcomeText">Select a management module</p>
+            </div>
+
+            <div class="nav-grid">
+                <a href="analytics.html" class="nav-card">
+                    <div class="nav-card-icon">A</div>
+                    <h3 id="cardAnalytics">Usage Analytics</h3>
+                    <p id="cardAnalyticsDesc">View usage statistics and trends</p>
+                </a>
+
+                <a href="conversations.html" class="nav-card">
+                    <div class="nav-card-icon">C</div>
+                    <h3 id="cardConversations">Conversation Browser</h3>
+                    <p id="cardConversationsDesc">Browse and analyze user conversations</p>
+                </a>
+
+                <a href="users.html" class="nav-card">
+                    <div class="nav-card-icon">U</div>
+                    <h3 id="cardUsers">User Management</h3>
+                    <p id="cardUsersDesc">Manage users, invite codes, and permissions</p>
+                </a>
+
+                <a href="tokens.html" class="nav-card">
+                    <div class="nav-card-icon">T</div>
+                    <h3 id="cardTokens">Token Review</h3>
+                    <p id="cardTokensDesc">Review and approve user token applications</p>
+                </a>
+
+                <a href="ggm.html" class="nav-card">
+                    <div class="nav-card-icon">G</div>
+                    <h3 id="cardGgm">GGM Console</h3>
+                    <p id="cardGgmDesc">Manage Gemini accounts and API tokens</p>
+                </a>
+
+                <a href="monitor.html" class="nav-card">
+                    <div class="nav-card-icon">M</div>
+                    <h3 id="cardMonitor">Server Monitor</h3>
+                    <p id="cardMonitorDesc">View server metrics and performance</p>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script src="../auth/i18n.js"></script>
+    <script src="../auth/auth.js"></script>
+    <script>
+        I18n.init();
+
+        (async function checkAuth() {
+            if (!AuthClient.isAuthenticated()) {
+                AuthClient.redirectToLogin();
+                return;
+            }
+            try {
+                const user = await AuthClient.getMe();
+                if (user.role > 1) {
+                    alert('Admin access required');
+                    window.location.href = '../index.html';
+                }
+            } catch (e) {
+                // 验证失败，清除token后重定向到登录页面
+                AuthClient.clearTokens();
+                AuthClient.redirectToLogin();
+            }
+        })();
+
+        function applyLanguage() {
+            const t = (cat, key) => I18n.t(cat, key);
+            document.getElementById('pageTitle').textContent = t('admin', 'dashboard') || 'Admin Dashboard';
+            document.getElementById('linkPortal').textContent = t('ggm', 'portal') || 'Portal';
+            document.getElementById('langSwitcher').textContent = I18n.getLang() === 'zh' ? 'EN' : '中';
+            document.getElementById('welcomeTitle').textContent = t('admin', 'adminPanel') || 'Admin Panel';
+            document.getElementById('welcomeText').textContent = t('admin', 'selectModule') || 'Select a module';
+            document.getElementById('cardAnalytics').textContent = t('admin', 'usageAnalytics') || 'Usage Analytics';
+            document.getElementById('cardAnalyticsDesc').textContent = t('admin', 'usageAnalyticsDesc') || 'View usage statistics and trends';
+            document.getElementById('cardConversations').textContent = t('admin', 'conversationBrowser') || 'Conversation Browser';
+            document.getElementById('cardConversationsDesc').textContent = t('admin', 'conversationBrowserDesc') || 'Browse and analyze user conversations';
+            document.getElementById('cardUsers').textContent = t('admin', 'userManagement') || 'User Management';
+            document.getElementById('cardUsersDesc').textContent = t('admin', 'userManagementDesc') || 'Manage users and permissions';
+            document.getElementById('cardTokens').textContent = t('admin', 'tokenReview') || 'Token Review';
+            document.getElementById('cardTokensDesc').textContent = t('admin', 'tokenReviewDesc') || 'Review token applications';
+            document.getElementById('cardGgm').textContent = t('ggm', 'console') || 'GGM Console';
+            document.getElementById('cardGgmDesc').textContent = t('admin', 'ggmDesc') || 'Manage Gemini accounts';
+            document.getElementById('cardMonitor').textContent = t('monitor', 'serverMonitor') || 'Server Monitor';
+            document.getElementById('cardMonitorDesc').textContent = t('admin', 'monitorDesc') || 'View server metrics';
+        }
+
+        function switchLanguage() {
+            I18n.toggleLang();
+            applyLanguage();
+        }
+
+        document.addEventListener('DOMContentLoaded', applyLanguage);
+    </script>
+</body>
+</html>

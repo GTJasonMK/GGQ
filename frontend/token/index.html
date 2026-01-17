@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Application</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #f0b429;
+            --accent-hover: #e5a820;
+            --accent-subtle: rgba(240, 180, 41, 0.15);
+            --success: #3fb950;
+            --warning: #d29922;
+            --danger: #f85149;
+            --radius: 10px;
+            --radius-sm: 6px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .back-btn {
+            padding: 8px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--accent-subtle);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .token-display {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            margin-bottom: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: var(--accent-subtle);
+            color: var(--accent);
+        }
+
+        .status-approved {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--success);
+        }
+
+        .status-rejected {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--danger);
+        }
+
+        .request-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .request-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+        }
+
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .request-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .request-reason {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .copy-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: rgba(63, 185, 80, 0.15);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(248, 81, 73, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .alert-warning {
+            background: rgba(210, 153, 34, 0.15);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+
+        .hidden { display: none !important; }
+
+        /* API 文档样式 */
+        .doc-section {
+            margin-bottom: 20px;
+        }
+
+        .doc-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--accent);
+        }
+
+        .code-block {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre;
+            color: var(--text-secondary);
+            position: relative;
+        }
+
+        .code-block .copy-code-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 8px;
+            font-size: 11px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .code-block .copy-code-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .doc-note {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            padding-left: 12px;
+            border-left: 2px solid var(--border-color);
+        }
+
+        .endpoint-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .endpoint-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+        }
+
+        .endpoint-method {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .endpoint-method.get { background: rgba(88, 166, 255, 0.2); color: #58a6ff; }
+        .endpoint-method.post { background: rgba(63, 185, 80, 0.2); color: #3fb950; }
+
+        .endpoint-path {
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .endpoint-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .tabs-doc {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tab-doc {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .tab-doc:hover { border-color: var(--accent); }
+        .tab-doc.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1 id="pageTitle">API Token</h1>
+            <a href="../index.html" class="back-btn" id="linkPortal">Portal</a>
+            <button class="back-btn" onclick="switchLanguage()" id="langSwitcher">EN</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="alertContainer"></div>
+
+        <!-- 未获批准时的提示 -->
+        <div class="alert alert-warning hidden" id="pendingAlert">
+            API Token is required for external API access (curl, SDK, third-party apps). Web chat is available without a token.
+        </div>
+
+        <!-- 已有Token显示 -->
+        <div class="card hidden" id="tokenCard">
+            <div class="card-title" id="labelMyToken">My API Token</div>
+            <div class="token-display" id="tokenDisplay">Loading...</div>
+            <button class="btn btn-secondary copy-btn" onclick="copyToken()" id="btnCopy">Copy</button>
+        </div>
+
+        <!-- 申请表单 -->
+        <div class="card hidden" id="applyCard">
+            <div class="card-title" id="labelApply">Apply for Token</div>
+            <form id="applyForm">
+                <div class="form-group">
+                    <label id="labelReason">Application Reason (Optional)</label>
+                    <textarea id="reasonInput" placeholder="Please describe why you need API access..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" id="btnSubmit">Submit Application</button>
+            </form>
+        </div>
+
+        <!-- 申请记录 -->
+        <div class="card">
+            <div class="card-title" id="labelHistory">Application History</div>
+            <div id="requestList" class="request-list">
+                <div class="empty-state" id="emptyState">Loading...</div>
+            </div>
+        </div>
+
+        <!-- API 使用文档 -->
+        <div class="card" id="apiDocCard">
+            <div class="card-title" id="labelApiDoc">API Documentation</div>
+
+            <div class="doc-section">
+                <h4>Available Endpoints</h4>
+                <div class="endpoint-list">
+                    <div class="endpoint-item">
+                        <span class="endpoint-method post">POST</span>
+                        <span class="endpoint-path">/v1/chat/completions</span>
+                        <span class="endpoint-desc">Chat completion (OpenAI compatible)</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="endpoint-method get">GET</span>
+                        <span class="endpoint-path">/v1/models</span>
+                        <span class="endpoint-desc">List available models</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="endpoint-method post">POST</span>
+                        <span class="endpoint-path">/v1/files</span>
+                        <span class="endpoint-desc">Upload files</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="doc-section">
+                <h4>Usage Examples</h4>
+                <div class="tabs-doc">
+                    <button class="tab-doc active" onclick="switchDocTab('curl')">cURL</button>
+                    <button class="tab-doc" onclick="switchDocTab('python')">Python</button>
+                    <button class="tab-doc" onclick="switchDocTab('node')">Node.js</button>
+                </div>
+
+                <div id="tab-curl" class="tab-content active">
+                    <div class="code-block" id="curlExample">
+                        <button class="copy-code-btn" onclick="copyCode('curlExample')">Copy</button>
+curl -X POST "http://localhost:8000/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -d '{
+    "model": "gemini-2.5-flash",
+    "messages": [
+      {"role": "user", "content": "Hello!"}
+    ],
+    "stream": false
+  }'</div>
+                </div>
+
+                <div id="tab-python" class="tab-content">
+                    <div class="code-block" id="pythonExample">
+                        <button class="copy-code-btn" onclick="copyCode('pythonExample')">Copy</button>
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_TOKEN",
+    base_url="http://localhost:8000/v1"
+)
+
+response = client.chat.completions.create(
+    model="gemini-2.5-flash",
+    messages=[
+        {"role": "user", "content": "Hello!"}
+    ]
+)
+
+print(response.choices[0].message.content)</div>
+                    <div class="doc-note">Install: pip install openai</div>
+                </div>
+
+                <div id="tab-node" class="tab-content">
+                    <div class="code-block" id="nodeExample">
+                        <button class="copy-code-btn" onclick="copyCode('nodeExample')">Copy</button>
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: 'YOUR_API_TOKEN',
+  baseURL: 'http://localhost:8000/v1'
+});
+
+const response = await client.chat.completions.create({
+  model: 'gemini-2.5-flash',
+  messages: [
+    { role: 'user', content: 'Hello!' }
+  ]
+});
+
+console.log(response.choices[0].message.content);</div>
+                    <div class="doc-note">Install: npm install openai</div>
+                </div>
+            </div>
+
+            <div class="doc-section">
+                <h4>Available Models</h4>
+                <div class="code-block">gemini-2.5-pro
+gemini-2.5-flash
+gemini-2.0-flash
+gemini-2.0-flash-thinking</div>
+            </div>
+
+            <div class="doc-section">
+                <h4>Streaming Example</h4>
+                <div class="code-block" id="streamExample">
+                    <button class="copy-code-btn" onclick="copyCode('streamExample')">Copy</button>
+# Python streaming example
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_TOKEN",
+    base_url="http://localhost:8000/v1"
+)
+
+stream = client.chat.completions.create(
+    model="gemini-2.5-flash",
+    messages=[{"role": "user", "content": "Tell me a story"}],
+    stream=True
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="")</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../auth/i18n.js"></script>
+    <script src="../config.js"></script>
+    <script src="../auth/auth.js"></script>
+    <script>
+        const GGM_API = window.APP_CONFIG ? window.APP_CONFIG.getGGMApi() : 'http://localhost:8000';
+        let currentToken = null;
+
+        I18n.init();
+
+        // 权限检查
+        (async function checkAuth() {
+            if (!AuthClient.isAuthenticated()) {
+                AuthClient.redirectToLogin();
+                return;
+            }
+            await loadData();
+        })();
+
+        function applyLanguage() {
+            const t = (cat, key) => I18n.t(cat, key);
+            document.getElementById('pageTitle').textContent = t('token', 'apiToken') || 'API Token';
+            document.getElementById('linkPortal').textContent = t('ggm', 'portal') || 'Portal';
+            document.getElementById('langSwitcher').textContent = I18n.getLang() === 'zh' ? 'EN' : '中';
+            document.getElementById('labelMyToken').textContent = t('token', 'myToken') || 'My API Token';
+            document.getElementById('btnCopy').textContent = t('common', 'copy') || 'Copy';
+            document.getElementById('labelApply').textContent = t('token', 'applyToken') || 'Apply for Token';
+            document.getElementById('labelReason').textContent = t('token', 'reason') || 'Application Reason';
+            document.getElementById('btnSubmit').textContent = t('token', 'submit') || 'Submit';
+            document.getElementById('labelHistory').textContent = t('token', 'history') || 'Application History';
+        }
+
+        function switchLanguage() {
+            I18n.toggleLang();
+            applyLanguage();
+        }
+
+        document.addEventListener('DOMContentLoaded', applyLanguage);
+
+        async function loadData() {
+            const authToken = AuthClient.getAccessToken();
+            try {
+                // 获取我的Token
+                const tokenRes = await fetch(`${GGM_API}/api/token-requests/my-token`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const tokenData = await tokenRes.json();
+
+                if (tokenData.has_token) {
+                    currentToken = tokenData.token;
+                    document.getElementById('tokenDisplay').textContent = tokenData.token;
+                    document.getElementById('tokenCard').classList.remove('hidden');
+                    document.getElementById('applyCard').classList.add('hidden');
+                    document.getElementById('pendingAlert').classList.add('hidden');
+                } else {
+                    document.getElementById('tokenDisplay').textContent = 'No token yet';
+                    document.getElementById('tokenCard').classList.add('hidden');
+                    document.getElementById('applyCard').classList.remove('hidden');
+                    document.getElementById('pendingAlert').classList.remove('hidden');
+                }
+
+                // 获取申请记录
+                const reqRes = await fetch(`${GGM_API}/api/token-requests/my`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const reqData = await reqRes.json();
+                renderRequests(reqData.requests || []);
+
+                // 检查是否有pending的申请，更新提示文字
+                const hasPending = (reqData.requests || []).some(r => r.status === 'pending');
+                if (hasPending && !tokenData.has_token) {
+                    document.getElementById('pendingAlert').textContent =
+                        'Your API Token application is pending review. Web chat remains available.';
+                }
+
+            } catch (e) {
+                showAlert('Failed to load data: ' + e.message, 'error');
+            }
+        }
+
+        function renderRequests(requests) {
+            const container = document.getElementById('requestList');
+            if (requests.length === 0) {
+                container.innerHTML = '<div class="empty-state">No applications yet</div>';
+                return;
+            }
+
+            container.innerHTML = requests.map(req => {
+                const statusClass = req.status === 'pending' ? 'pending' : req.status === 'approved' ? 'approved' : 'rejected';
+                const statusText = req.status === 'pending' ? 'Pending' : req.status === 'approved' ? 'Approved' : 'Rejected';
+                const time = new Date(req.created_at * 1000).toLocaleString();
+
+                return `
+                    <div class="request-item">
+                        <div class="request-header">
+                            <span class="status-badge status-${statusClass}">${statusText}</span>
+                            <span class="request-time">${time}</span>
+                        </div>
+                        ${req.reason ? `<div class="request-reason">${req.reason}</div>` : ''}
+                        ${req.reject_reason ? `<div class="request-reason" style="color: var(--danger);">Reason: ${req.reject_reason}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('applyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const reason = document.getElementById('reasonInput').value;
+            const user = AuthClient.getUser();
+            const authToken = AuthClient.getAccessToken();
+
+            try {
+                const res = await fetch(`${GGM_API}/api/token-requests`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ reason, username: user?.username || '' })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    showAlert('Application submitted successfully!', 'success');
+                    document.getElementById('reasonInput').value = '';
+                    await loadData();
+                } else {
+                    showAlert(data.detail || 'Failed to submit', 'error');
+                }
+            } catch (e) {
+                showAlert('Error: ' + e.message, 'error');
+            }
+        });
+
+        function copyToken() {
+            if (currentToken) {
+                navigator.clipboard.writeText(currentToken);
+                showAlert('Token copied!', 'success');
+            }
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 3000);
+        }
+
+        // 文档标签切换
+        function switchDocTab(tab) {
+            document.querySelectorAll('.tab-doc').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            document.querySelector(`[onclick="switchDocTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        // 复制代码
+        function copyCode(elementId) {
+            const element = document.getElementById(elementId);
+            // 获取代码内容（排除按钮文本）
+            const code = element.textContent.replace('Copy', '').trim();
+
+            // 如果有token，替换示例中的占位符
+            const tokenToUse = currentToken || 'YOUR_API_TOKEN';
+            const codeWithToken = code.replace(/YOUR_API_TOKEN/g, tokenToUse);
+
+            navigator.clipboard.writeText(codeWithToken);
+            showAlert('Code copied!', 'success');
+        }
+
+        // 更新文档中的API地址
+        function updateApiUrl() {
+            const baseUrl = GGM_API;
+            document.querySelectorAll('.code-block').forEach(block => {
+                block.innerHTML = block.innerHTML.replace(/http:\/\/localhost:8000/g, baseUrl);
+            });
+        }
+
+        // 页面加载后更新API地址
+        document.addEventListener('DOMContentLoaded', () => {
+            applyLanguage();
+            updateApiUrl();
+        });
+    </script>
+</body>
+</html>

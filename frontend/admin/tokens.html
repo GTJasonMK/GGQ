@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Review</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #f0b429;
+            --accent-subtle: rgba(240, 180, 41, 0.15);
+            --success: #3fb950;
+            --danger: #f85149;
+            --radius: 10px;
+            --radius-sm: 6px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .back-btn {
+            padding: 8px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--accent-subtle);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .tab:hover { border-color: var(--accent); color: var(--text-primary); }
+        .tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .request-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .request-user {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .request-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .request-reason {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn:hover { opacity: 0.9; }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-pending { background: var(--accent-subtle); color: var(--accent); }
+        .status-approved { background: rgba(63, 185, 80, 0.15); color: var(--success); }
+        .status-rejected { background: rgba(248, 81, 73, 0.15); color: var(--danger); }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-muted);
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1 id="pageTitle">Token Review</h1>
+            <a href="index.html" class="back-btn">Admin</a>
+            <a href="../index.html" class="back-btn" id="linkPortal">Portal</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="loadRequests('pending')">Pending</button>
+            <button class="tab" onclick="loadRequests(null)">All</button>
+        </div>
+
+        <div id="requestList">
+            <div class="empty-state">Loading...</div>
+        </div>
+    </div>
+
+    <script src="../auth/i18n.js"></script>
+    <script src="../config.js"></script>
+    <script src="../auth/auth.js"></script>
+    <script>
+        const GGM_API = window.APP_CONFIG ? window.APP_CONFIG.getGGMApi() : 'http://localhost:8000';
+
+        I18n.init();
+
+        (async function checkAuth() {
+            if (!AuthClient.isAuthenticated()) {
+                AuthClient.redirectToLogin();
+                return;
+            }
+            try {
+                const user = await AuthClient.getMe();
+                if (user.role > 1) {
+                    alert('Admin access required');
+                    window.location.href = '../index.html';
+                    return;
+                }
+            } catch (e) {
+                // 验证失败，清除token后重定向到登录页面
+                AuthClient.clearTokens();
+                AuthClient.redirectToLogin();
+                return;
+            }
+
+            loadRequests('pending');
+        })();
+
+        function getAuthHeaders() {
+            const token = AuthClient.getAccessToken();
+            return {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        async function loadRequests(status) {
+            document.querySelectorAll('.tab').forEach((t, i) => {
+                t.classList.toggle('active', (status === 'pending' && i === 0) || (status === null && i === 1));
+            });
+
+            const url = status !== null
+                ? `${GGM_API}/api/admin/token-requests?status=${status}`
+                : `${GGM_API}/api/admin/token-requests`;
+
+            try {
+                const res = await fetch(url, {
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                renderRequests(data.requests || []);
+            } catch (e) {
+                document.getElementById('requestList').innerHTML =
+                    `<div class="empty-state">Error: ${e.message}</div>`;
+            }
+        }
+
+        function renderRequests(requests) {
+            const container = document.getElementById('requestList');
+            if (requests.length === 0) {
+                container.innerHTML = '<div class="empty-state">No requests</div>';
+                return;
+            }
+
+            container.innerHTML = requests.map(req => {
+                const statusClass = req.status === 'pending' ? 'pending' : req.status === 'approved' ? 'approved' : 'rejected';
+                const statusText = req.status === 'pending' ? 'Pending' : req.status === 'approved' ? 'Approved' : 'Rejected';
+                const time = new Date(req.created_at * 1000).toLocaleString();
+                const actions = req.status === 'pending' ? `
+                    <div class="request-actions">
+                        <button class="btn btn-success" onclick="approve('${req.id}')">Approve</button>
+                        <button class="btn btn-danger" onclick="reject('${req.id}')">Reject</button>
+                    </div>
+                ` : '';
+
+                return `
+                    <div class="request-card">
+                        <div class="request-header">
+                            <span class="request-user">${req.username}</span>
+                            <span class="status-badge status-${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="request-time">${time}</div>
+                        ${req.reason ? `<div class="request-reason">${req.reason}</div>` : ''}
+                        ${actions}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function approve(id) {
+            if (!confirm('Approve this request?')) return;
+            try {
+                const res = await fetch(`${GGM_API}/api/admin/token-requests/${id}/approve`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                if (res.ok) {
+                    loadRequests('pending');
+                } else {
+                    const data = await res.json();
+                    alert(data.detail || 'Failed');
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function reject(id) {
+            const reason = prompt('Rejection reason (optional):');
+            try {
+                const res = await fetch(`${GGM_API}/api/admin/token-requests/${id}/reject`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ reason: reason || '' })
+                });
+                if (res.ok) {
+                    loadRequests('pending');
+                } else {
+                    const data = await res.json();
+                    alert(data.detail || 'Failed');
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

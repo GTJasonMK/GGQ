@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - User Management</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent: #f0b429;
+            --accent-hover: #e5a820;
+            --accent-subtle: rgba(240, 180, 41, 0.15);
+            --success: #3fb950;
+            --danger: #f85149;
+            --warning: #d29922;
+            --info: #58a6ff;
+            --radius: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .user-role {
+            padding: 4px 10px;
+            background: var(--accent-subtle);
+            color: var(--accent);
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover { background: var(--accent-hover); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #da3633;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .lang-switcher {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-switcher:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            min-height: calc(100vh - 69px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-subtle);
+            color: var(--accent);
+            border-right: 3px solid var(--accent);
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Content */
+        .content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* Status Badge */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success { background: rgba(63, 185, 80, 0.15); color: var(--success); }
+        .badge-danger { background: rgba(248, 81, 73, 0.15); color: var(--danger); }
+        .badge-warning { background: rgba(210, 153, 34, 0.15); color: var(--warning); }
+        .badge-info { background: rgba(88, 166, 255, 0.15); color: var(--info); }
+
+        /* Role Badge */
+        .role-super-admin { background: rgba(248, 81, 73, 0.15); color: var(--danger); }
+        .role-admin { background: rgba(240, 180, 41, 0.15); color: var(--accent); }
+        .role-user { background: rgba(88, 166, 255, 0.15); color: var(--info); }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-subtle);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+
+        .toast {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 280px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Copy button */
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 14px;
+        }
+
+        .copy-btn:hover {
+            color: var(--accent);
+        }
+
+        /* Code display */
+        .code-display {
+            font-family: 'Consolas', monospace;
+            background: var(--bg-tertiary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <a href="../index.html" class="logo">
+                <div class="logo-icon">A</div>
+                <span class="logo-text" id="logoText">Admin Panel</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <button class="lang-switcher" id="langSwitcher" onclick="switchLanguage()">EN</button>
+            <div class="user-info">
+                <span id="currentUsername">-</span>
+                <span class="user-role" id="currentRole">-</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="handleLogout()" id="logoutBtn">Logout</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <a class="nav-item active" data-page="users">
+                <span class="nav-icon">U</span>
+                <span id="navUsers">Users</span>
+            </a>
+            <a class="nav-item" data-page="invite-codes">
+                <span class="nav-icon">I</span>
+                <span id="navInviteCodes">Invite Codes</span>
+            </a>
+            <a class="nav-item" href="../index.html">
+                <span class="nav-icon">H</span>
+                <span id="navBackToPortal">Back to Portal</span>
+            </a>
+        </aside>
+
+        <main class="content">
+            <!-- Users Page -->
+            <div id="usersPage" class="page">
+                <h1 class="page-title" id="pageTitleUsers">User Management</h1>
+
+                <div class="stats-grid" id="userStats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalUsers">-</div>
+                        <div class="stat-label" id="labelTotalUsers">Total Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="activeUsers">-</div>
+                        <div class="stat-label" id="labelActiveUsers">Active Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="adminCount">-</div>
+                        <div class="stat-label" id="labelAdmins">Admins</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="recentUsers">-</div>
+                        <div class="stat-label" id="labelNewThisWeek">New This Week</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title" id="cardTitleAllUsers">All Users</span>
+                        <button class="btn" onclick="showCreateUserModal()" id="createUserBtn">+ Create User</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="search-bar">
+                            <input type="text" class="form-input search-input" id="userSearch"
+                                   placeholder="Search by username or email...">
+                            <select class="form-select" id="roleFilter" style="width: 150px;">
+                                <option value="" id="optionAllRoles">All Roles</option>
+                                <option value="0" id="optionSuperAdmin">Super Admin</option>
+                                <option value="1" id="optionAdmin">Admin</option>
+                                <option value="2" id="optionUser">User</option>
+                            </select>
+                        </div>
+
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th id="thUser">User</th>
+                                        <th id="thRole">Role</th>
+                                        <th id="thStatus">Status</th>
+                                        <th id="thCreated">Created</th>
+                                        <th id="thLastLogin">Last Login</th>
+                                        <th id="thActions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="6" class="loading" id="loadingText">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination">
+                            <div class="pagination-info" id="usersPaginationInfo">-</div>
+                            <div class="pagination-buttons">
+                                <button class="btn btn-secondary btn-sm" id="usersPrevBtn" onclick="loadUsers(currentPage - 1)">Previous</button>
+                                <button class="btn btn-secondary btn-sm" id="usersNextBtn" onclick="loadUsers(currentPage + 1)">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invite Codes Page -->
+            <div id="inviteCodesPage" class="page hidden">
+                <h1 class="page-title" id="pageTitleInviteCodes">Invite Codes</h1>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title" id="cardTitleManageCodes">Manage Invite Codes</span>
+                        <button class="btn" onclick="showCreateCodeModal()" id="createCodeBtn">+ Create Code</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th id="thCode">Code</th>
+                                        <th id="thRoleGrant">Role Grant</th>
+                                        <th id="thUses">Uses</th>
+                                        <th id="thExpires">Expires</th>
+                                        <th id="thCodeStatus">Status</th>
+                                        <th id="thCreatedBy">Created By</th>
+                                        <th id="thCodeActions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="codesTableBody">
+                                    <tr>
+                                        <td colspan="7" class="loading" id="loadingTextCodes">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create User Modal -->
+    <div class="modal-overlay" id="createUserModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitleCreateUser">Create User</h3>
+                <button class="modal-close" onclick="closeModal('createUserModal')">&times;</button>
+            </div>
+            <form onsubmit="handleCreateUser(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="newEmail" id="labelNewEmail">Email</label>
+                        <input type="email" id="newEmail" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newUsername" id="labelNewUsername">Username</label>
+                        <input type="text" id="newUsername" class="form-input"
+                               pattern="^[a-zA-Z0-9_]{3,50}$" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword" id="labelNewPassword">Password</label>
+                        <input type="password" id="newPassword" class="form-input"
+                               minlength="8" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newRole" id="labelNewRole">Role</label>
+                        <select id="newRole" class="form-select" required>
+                            <option value="2" id="newRoleUser">User</option>
+                            <option value="1" id="newRoleAdmin">Admin</option>
+                            <option value="0" id="newRoleSuperAdmin">Super Admin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createUserModal')" id="btnCancelCreateUser">Cancel</button>
+                    <button type="submit" class="btn" id="btnSubmitCreateUser">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal-overlay" id="editUserModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitleEditUser">Edit User</h3>
+                <button class="modal-close" onclick="closeModal('editUserModal')">&times;</button>
+            </div>
+            <form onsubmit="handleUpdateUser(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="editUserId">
+                    <div class="form-group">
+                        <label for="editEmail" id="labelEditEmail">Email</label>
+                        <input type="email" id="editEmail" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUsername" id="labelEditUsername">Username</label>
+                        <input type="text" id="editUsername" class="form-input"
+                               pattern="^[a-zA-Z0-9_]{3,50}$" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editRole" id="labelEditRole">Role</label>
+                        <select id="editRole" class="form-select" required>
+                            <option value="2" id="editRoleUser">User</option>
+                            <option value="1" id="editRoleAdmin">Admin</option>
+                            <option value="0" id="editRoleSuperAdmin">Super Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editActive" id="labelEditStatus">Status</label>
+                        <select id="editActive" class="form-select" required>
+                            <option value="true" id="editStatusActive">Active</option>
+                            <option value="false" id="editStatusDisabled">Disabled</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editUserModal')" id="btnCancelEditUser">Cancel</button>
+                    <button type="submit" class="btn" id="btnSubmitEditUser">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Invite Code Modal -->
+    <div class="modal-overlay" id="createCodeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitleCreateCode">Create Invite Code</h3>
+                <button class="modal-close" onclick="closeModal('createCodeModal')">&times;</button>
+            </div>
+            <form onsubmit="handleCreateCode(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="codeRoleGrant" id="labelCodeRoleGrant">Role to Grant</label>
+                        <select id="codeRoleGrant" class="form-select" required>
+                            <option value="2" id="codeRoleUser">User</option>
+                            <option value="1" id="codeRoleAdmin">Admin</option>
+                            <option value="0" id="codeRoleSuperAdmin">Super Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="codeMaxUses" id="labelCodeMaxUses">Max Uses (0 = unlimited)</label>
+                        <input type="number" id="codeMaxUses" class="form-input" value="1" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="codeExpiresDays" id="labelCodeExpiresDays">Expires In (days, 0 = never)</label>
+                        <input type="number" id="codeExpiresDays" class="form-input" value="7" min="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createCodeModal')" id="btnCancelCreateCode">Cancel</button>
+                    <button type="submit" class="btn" id="btnSubmitCreateCode">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="../auth/i18n.js"></script>
+    <script src="../config.js"></script>
+    <script src="../auth/auth.js"></script>
+    <script>
+        // 状态
+        let currentUser = null;
+        let currentPage = 1;
+        const pageSize = 20;
+
+        // 角色样式类映射
+        const roleClasses = { 0: 'role-super-admin', 1: 'role-admin', 2: 'role-user' };
+
+        // 获取角色名称（使用i18n）
+        function getRoleName(role) {
+            return I18n.getRoleName(role);
+        }
+
+        // 应用语言
+        function applyLanguage() {
+            const t = (cat, key) => I18n.t(cat, key);
+
+            // 更新页面静态文本
+            document.getElementById('langSwitcher').textContent = I18n.getLang() === 'zh' ? 'EN' : '中';
+            document.getElementById('logoutBtn').textContent = t('common', 'logout');
+            document.getElementById('logoText').textContent = t('admin', 'adminPanel');
+
+            // 侧边栏
+            document.getElementById('navUsers').textContent = t('admin', 'users');
+            document.getElementById('navInviteCodes').textContent = t('admin', 'inviteCodes');
+            document.getElementById('navBackToPortal').textContent = t('admin', 'backToPortal');
+
+            // 用户管理页面
+            document.getElementById('pageTitleUsers').textContent = t('admin', 'userManagement');
+            document.getElementById('labelTotalUsers').textContent = t('admin', 'totalUsers');
+            document.getElementById('labelActiveUsers').textContent = t('admin', 'activeUsers');
+            document.getElementById('labelAdmins').textContent = t('admin', 'admins');
+            document.getElementById('labelNewThisWeek').textContent = t('admin', 'newThisWeek');
+            document.getElementById('cardTitleAllUsers').textContent = t('admin', 'allUsers');
+            document.getElementById('createUserBtn').textContent = '+ ' + t('admin', 'createUser');
+            document.getElementById('userSearch').placeholder = t('admin', 'searchPlaceholder');
+            document.getElementById('optionAllRoles').textContent = t('admin', 'allRoles');
+            document.getElementById('optionSuperAdmin').textContent = t('admin', 'superAdmin');
+            document.getElementById('optionAdmin').textContent = t('admin', 'adminRole');
+            document.getElementById('optionUser').textContent = t('admin', 'userRole');
+            document.getElementById('thUser').textContent = t('admin', 'user');
+            document.getElementById('thRole').textContent = t('admin', 'role');
+            document.getElementById('thStatus').textContent = t('common', 'status');
+            document.getElementById('thCreated').textContent = t('admin', 'created');
+            document.getElementById('thLastLogin').textContent = t('admin', 'lastLogin');
+            document.getElementById('thActions').textContent = t('common', 'actions');
+            document.getElementById('usersPrevBtn').textContent = t('admin', 'previous');
+            document.getElementById('usersNextBtn').textContent = t('admin', 'next');
+
+            // 邀请码页面
+            document.getElementById('pageTitleInviteCodes').textContent = t('admin', 'inviteCodes');
+            document.getElementById('cardTitleManageCodes').textContent = t('admin', 'manageInviteCodes');
+            document.getElementById('createCodeBtn').textContent = '+ ' + t('admin', 'createCode');
+            document.getElementById('thCode').textContent = t('admin', 'code');
+            document.getElementById('thRoleGrant').textContent = t('admin', 'roleGrant');
+            document.getElementById('thUses').textContent = t('admin', 'uses');
+            document.getElementById('thExpires').textContent = t('admin', 'expires');
+            document.getElementById('thCodeStatus').textContent = t('common', 'status');
+            document.getElementById('thCreatedBy').textContent = t('admin', 'createdBy');
+            document.getElementById('thCodeActions').textContent = t('common', 'actions');
+
+            // 创建用户 Modal
+            document.getElementById('modalTitleCreateUser').textContent = t('admin', 'createUser');
+            document.getElementById('labelNewEmail').textContent = t('admin', 'email');
+            document.getElementById('labelNewUsername').textContent = t('admin', 'username');
+            document.getElementById('labelNewPassword').textContent = t('admin', 'password');
+            document.getElementById('labelNewRole').textContent = t('admin', 'role');
+            document.getElementById('newRoleUser').textContent = t('admin', 'userRole');
+            document.getElementById('newRoleAdmin').textContent = t('admin', 'adminRole');
+            document.getElementById('newRoleSuperAdmin').textContent = t('admin', 'superAdmin');
+            document.getElementById('btnCancelCreateUser').textContent = t('common', 'cancel');
+            document.getElementById('btnSubmitCreateUser').textContent = t('common', 'create');
+
+            // 编辑用户 Modal
+            document.getElementById('modalTitleEditUser').textContent = t('admin', 'editUser');
+            document.getElementById('labelEditEmail').textContent = t('admin', 'email');
+            document.getElementById('labelEditUsername').textContent = t('admin', 'username');
+            document.getElementById('labelEditRole').textContent = t('admin', 'role');
+            document.getElementById('editRoleUser').textContent = t('admin', 'userRole');
+            document.getElementById('editRoleAdmin').textContent = t('admin', 'adminRole');
+            document.getElementById('editRoleSuperAdmin').textContent = t('admin', 'superAdmin');
+            document.getElementById('labelEditStatus').textContent = t('common', 'status');
+            document.getElementById('editStatusActive').textContent = t('common', 'active');
+            document.getElementById('editStatusDisabled').textContent = t('common', 'disabled');
+            document.getElementById('btnCancelEditUser').textContent = t('common', 'cancel');
+            document.getElementById('btnSubmitEditUser').textContent = t('admin', 'saveChanges');
+
+            // 创建邀请码 Modal
+            document.getElementById('modalTitleCreateCode').textContent = t('admin', 'createCode');
+            document.getElementById('labelCodeRoleGrant').textContent = t('admin', 'roleToGrant');
+            document.getElementById('codeRoleUser').textContent = t('admin', 'userRole');
+            document.getElementById('codeRoleAdmin').textContent = t('admin', 'adminRole');
+            document.getElementById('codeRoleSuperAdmin').textContent = t('admin', 'superAdmin');
+            document.getElementById('labelCodeMaxUses').textContent = t('admin', 'maxUses') + ' (' + t('admin', 'maxUsesHint') + ')';
+            document.getElementById('labelCodeExpiresDays').textContent = t('admin', 'expiresIn') + ' (' + t('admin', 'expiresInHint') + ')';
+            document.getElementById('btnCancelCreateCode').textContent = t('common', 'cancel');
+            document.getElementById('btnSubmitCreateCode').textContent = t('common', 'create');
+
+            // 更新当前用户角色显示
+            if (currentUser) {
+                document.getElementById('currentRole').textContent = getRoleName(currentUser.role);
+            }
+
+            document.title = t('admin', 'adminPanel') + ' - ' + t('admin', 'userManagement');
+        }
+
+        function switchLanguage() {
+            I18n.toggleLang();
+            applyLanguage();
+            // 重新加载数据以更新表格中的翻译
+            loadUsers(currentPage);
+            loadInviteCodes();
+        }
+
+        // 初始化
+        async function init() {
+            // 检查管理员权限
+            const authenticated = await AuthClient.requireAdmin();
+            if (!authenticated) return;
+
+            currentUser = AuthClient.getUser();
+            applyLanguage();
+            updateHeaderInfo();
+            setupNavigation();
+            setupFilters();
+
+            // 加载初始数据
+            loadUsers();
+            loadInviteCodes();
+        }
+
+        function updateHeaderInfo() {
+            document.getElementById('currentUsername').textContent = currentUser.username;
+            document.getElementById('currentRole').textContent = getRoleName(currentUser.role);
+
+            // 只有超管可以创建用户
+            if (currentUser.role !== 0) {
+                document.getElementById('createUserBtn').classList.add('hidden');
+            }
+
+            // 限制角色选择
+            limitRoleOptions();
+        }
+
+        function limitRoleOptions() {
+            // 普通管理员不能创建/编辑为更高权限
+            const selects = ['newRole', 'editRole', 'codeRoleGrant'];
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    Array.from(select.options).forEach(opt => {
+                        // 不能选择比自己权限高或相等的角色（除了超管）
+                        if (currentUser.role !== 0 && parseInt(opt.value) <= currentUser.role) {
+                            opt.disabled = true;
+                        }
+                    });
+                }
+            });
+        }
+
+        // 导航
+        function setupNavigation() {
+            document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+                item.addEventListener('click', () => {
+                    const page = item.dataset.page;
+                    switchPage(page);
+
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                });
+            });
+        }
+
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+
+            if (page === 'users') {
+                document.getElementById('usersPage').classList.remove('hidden');
+            } else if (page === 'invite-codes') {
+                document.getElementById('inviteCodesPage').classList.remove('hidden');
+            }
+        }
+
+        // 搜索和筛选
+        function setupFilters() {
+            let searchTimeout;
+            document.getElementById('userSearch').addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => loadUsers(1), 300);
+            });
+
+            document.getElementById('roleFilter').addEventListener('change', () => loadUsers(1));
+        }
+
+        // 加载用户列表
+        async function loadUsers(page = 1) {
+            currentPage = page;
+            const search = document.getElementById('userSearch').value;
+            const role = document.getElementById('roleFilter').value;
+
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="loading">Loading...</td></tr>';
+
+            try {
+                let url = `${AuthClient.API_BASE}/api/users?page=${page}&page_size=${pageSize}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (role !== '') url += `&role=${role}`;
+
+                const response = await AuthClient.authFetch(url);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to load users');
+                }
+
+                renderUsersTable(data.users);
+                updatePagination(data.total, data.page, data.page_size);
+                updateUserStats(data);
+
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" class="loading">Error: ${err.message}</td></tr>`;
+                showToast(err.message, 'error');
+            }
+        }
+
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('usersTableBody');
+            const t = (cat, key) => I18n.t(cat, key);
+
+            if (users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${t('admin', 'noUsers')}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>
+                        <div><strong>${escapeHtml(user.username)}</strong></div>
+                        <div style="font-size: 12px; color: var(--text-muted);">${escapeHtml(user.email)}</div>
+                    </td>
+                    <td><span class="badge ${roleClasses[user.role]}">${getRoleName(user.role)}</span></td>
+                    <td><span class="badge ${user.is_active ? 'badge-success' : 'badge-danger'}">${user.is_active ? t('common', 'active') : t('common', 'disabled')}</span></td>
+                    <td>${formatDate(user.created_at)}</td>
+                    <td>${user.last_login_at ? formatDate(user.last_login_at) : '-'}</td>
+                    <td>
+                        <div class="actions">
+                            ${canEditUser(user) ? `
+                                <button class="btn btn-secondary btn-sm" onclick="showEditUserModal(${user.id})">${t('common', 'edit')}</button>
+                                <button class="btn btn-danger btn-sm" onclick="confirmDeleteUser(${user.id}, '${escapeHtml(user.username)}')">${t('common', 'delete')}</button>
+                            ` : '-'}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function canEditUser(user) {
+            // 超管可以编辑所有人（除了自己的删除）
+            if (currentUser.role === 0) return true;
+            // 普通管理员只能编辑比自己权限低的用户
+            return user.role > currentUser.role;
+        }
+
+        function updatePagination(total, page, pageSize) {
+            const totalPages = Math.ceil(total / pageSize);
+            const start = (page - 1) * pageSize + 1;
+            const end = Math.min(page * pageSize, total);
+
+            document.getElementById('usersPaginationInfo').textContent = I18n.t('admin', 'showing', { start, end, total });
+            document.getElementById('usersPrevBtn').disabled = page <= 1;
+            document.getElementById('usersNextBtn').disabled = page >= totalPages;
+        }
+
+        function updateUserStats(data) {
+            document.getElementById('totalUsers').textContent = data.total || 0;
+            // 这些统计需要后端支持，暂时显示基础数据
+            document.getElementById('activeUsers').textContent = data.users.filter(u => u.is_active).length;
+            document.getElementById('adminCount').textContent = data.users.filter(u => u.role <= 1).length;
+            document.getElementById('recentUsers').textContent = '-';
+        }
+
+        // 加载邀请码
+        async function loadInviteCodes() {
+            const tbody = document.getElementById('codesTableBody');
+            tbody.innerHTML = '<tr><td colspan="7" class="loading">Loading...</td></tr>';
+
+            try {
+                const response = await AuthClient.authFetch(`${AuthClient.API_BASE}/api/invite-codes`);
+                const codes = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(codes.detail || 'Failed to load invite codes');
+                }
+
+                renderCodesTable(codes);
+
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" class="loading">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function renderCodesTable(codes) {
+            const tbody = document.getElementById('codesTableBody');
+            const t = (cat, key) => I18n.t(cat, key);
+
+            if (codes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${t('admin', 'noInviteCodes')}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = codes.map(code => {
+                const isExpired = code.expires_at && new Date(code.expires_at) < new Date();
+                const isUsedUp = code.max_uses > 0 && code.current_uses >= code.max_uses;
+                const statusKey = !code.is_active ? 'disabled' : (isExpired ? 'expired' : (isUsedUp ? 'usedUp' : 'active'));
+                const statusText = t('common', statusKey === 'usedUp' ? 'usedUp' : statusKey) || t('admin', statusKey);
+                const statusClass = statusKey === 'active' ? 'badge-success' : 'badge-danger';
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="code-display">
+                                <code>${escapeHtml(code.code)}</code>
+                                <button class="copy-btn" onclick="copyToClipboard('${escapeHtml(code.code)}')" title="${t('common', 'copy')}">C</button>
+                            </div>
+                        </td>
+                        <td><span class="badge ${roleClasses[code.role_grant]}">${getRoleName(code.role_grant)}</span></td>
+                        <td>${code.current_uses}/${code.max_uses || t('admin', 'unlimited')}</td>
+                        <td>${code.expires_at ? formatDate(code.expires_at) : t('admin', 'never')}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td>${code.creator ? escapeHtml(code.creator.username) : '-'}</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-danger btn-sm" onclick="confirmDeleteCode(${code.id})">${t('common', 'delete')}</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Modal 操作
+        function showModal(id) {
+            document.getElementById(id).classList.add('show');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        function showCreateUserModal() {
+            document.getElementById('newEmail').value = '';
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('newRole').value = '2';
+            showModal('createUserModal');
+        }
+
+        async function showEditUserModal(userId) {
+            try {
+                const response = await AuthClient.authFetch(`${AuthClient.API_BASE}/api/users/${userId}`);
+                const user = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(user.detail || 'Failed to load user');
+                }
+
+                document.getElementById('editUserId').value = user.id;
+                document.getElementById('editEmail').value = user.email;
+                document.getElementById('editUsername').value = user.username;
+                document.getElementById('editRole').value = user.role;
+                document.getElementById('editActive').value = user.is_active.toString();
+
+                showModal('editUserModal');
+
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function showCreateCodeModal() {
+            document.getElementById('codeRoleGrant').value = '2';
+            document.getElementById('codeMaxUses').value = '1';
+            document.getElementById('codeExpiresDays').value = '7';
+            showModal('createCodeModal');
+        }
+
+        // 创建用户
+        async function handleCreateUser(e) {
+            e.preventDefault();
+
+            const data = {
+                email: document.getElementById('newEmail').value,
+                username: document.getElementById('newUsername').value,
+                password: document.getElementById('newPassword').value,
+                role: parseInt(document.getElementById('newRole').value)
+            };
+
+            try {
+                const response = await AuthClient.authFetch(`${AuthClient.API_BASE}/api/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.detail || 'Failed to create user');
+                }
+
+                showToast(I18n.t('admin', 'userCreated'), 'success');
+                closeModal('createUserModal');
+                loadUsers();
+
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // 更新用户
+        async function handleUpdateUser(e) {
+            e.preventDefault();
+
+            const userId = document.getElementById('editUserId').value;
+            const data = {
+                email: document.getElementById('editEmail').value,
+                username: document.getElementById('editUsername').value,
+                role: parseInt(document.getElementById('editRole').value),
+                is_active: document.getElementById('editActive').value === 'true'
+            };
+
+            try {
+                const response = await AuthClient.authFetch(`${AuthClient.API_BASE}/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.detail || 'Failed to update user');
+                }
+
+                showToast(I18n.t('admin', 'userUpdated'), 'success');
+                closeModal('editUserModal');
+                loadUsers(currentPage);
+
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // 删除用户
+        async function confirmDeleteUser(userId, username) {
+            if (!confirm(I18n.t('admin', 'confirmDeleteUser', { username }))) return;
+
+            try {
+                const response = await AuthClient.authFetch(`${AuthClient.API_BASE}/api/users/${userId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const result = await response.json();
+                    throw new Error(result.detail || 'Failed to delete user');
+                }
+
+                showToast(I18n.t('admin', 'userDeleted'), 'success');
+                loadUsers(currentPage);
+
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // 创建邀请码
+        async function handleCreateCode(e) {
+            e.preventDefault();
+
+            const expiresDays = parseInt(document.getElementById('codeExpiresDays').value);
+            const data = {
+                role_grant: parseInt(document.getElementById('codeRoleGrant').value),
+                max_uses: parseInt(document.getElementById('codeMaxUses').value),
+                expires_days: expiresDays > 0 ? expiresDays : null
+            };
+
+            try {
+                const response = await AuthClient.authFetch(`${AuthClient.API_BASE}/api/invite-codes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.detail || 'Failed to create invite code');
+                }
+
+                showToast(I18n.t('admin', 'codeCreated', { code: result.code }), 'success');
+                closeModal('createCodeModal');
+                loadInviteCodes();
+
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // 删除邀请码
+        async function confirmDeleteCode(codeId) {
+            if (!confirm(I18n.t('admin', 'confirmDeleteCode'))) return;
+
+            try {
+                const response = await AuthClient.authFetch(`${AuthClient.API_BASE}/api/invite-codes/${codeId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const result = await response.json();
+                    throw new Error(result.detail || 'Failed to delete invite code');
+                }
+
+                showToast(I18n.t('admin', 'codeDeleted'), 'success');
+                loadInviteCodes();
+
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // 登出
+        async function handleLogout() {
+            await AuthClient.logout();
+            window.location.href = '../auth/login.html';
+        }
+
+        // 工具函数
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(I18n.t('admin', 'copyToClipboard'), 'success');
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>

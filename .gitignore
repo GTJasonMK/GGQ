@@ -1,57 +1,72 @@
-# Python
+# === 敏感配置文件 (必须忽略) ===
+.env
+.env.local
+.env.*.local
+*.env
+# 核心敏感配置文件 (包含密码、API Key、Cookie)
+backend/config.py
+backend/GGM/config.json
+backend/GGM/credient.txt
+# 如果有本地覆盖配置
+backend/config_local.py
+
+# === 数据与日志 (必须忽略) ===
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+# 各个模块的 data 目录（包含数据库、会话、聊天记录）
+backend/auth/data/*
+backend/GGM/data/*
+backend/monitoringDashboard/data/*
+# 排除 data 目录下的 .gitkeep (如果想保留目录结构)
+!**/data/.gitkeep
+# 日志文件
+*.log
+logs/
+/tmp/
+
+# === Python 运行环境 ===
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-venv/
-env/
-.venv/
-.env
 *.egg-info/
 dist/
 build/
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
 
-# IDE
+# === Docker 相关 ===
+*.tar
+webdev-images.tar
+
+# === 浏览器自动化 (Playwright/Selenium) ===
+# 忽略浏览器下载的二进制文件和用户信息目录
+.auth/
+user_data/
+test-results/
+.playwright/
+
+# === 操作系统与 IDE ===
+.DS_Store
+Thumbs.db
+desktop.ini
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# 数据库文件
-*.db
-*.sqlite
-*.sqlite3
-
-# 日志文件
-*.log
-logs/
-
-# 数据目录
-backend/GGM/data/
-backend/auth/data/
-backend/monitoringDashboard/data/
-
-# Docker 导出镜像
-*.tar
-webdev-images.tar
-
-# 本地配置（包含敏感信息）
-backend/config_local.py
-
-# Playwright
-.playwright/
-
-# 系统文件
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# 临时文件
 *.tmp
 *.temp
 *.bak
+
+# === 临时文档 ===
 .claude
 CLAUDE.md
 SSH_PROXY_GUIDE.md

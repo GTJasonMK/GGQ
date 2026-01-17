@@ -5,13 +5,13 @@
  */
 window.APP_CONFIG = {
     // GGM API 地址（空字符串表示使用相对路径，通过 nginx 代理）
-    GGM_API: 'http://localhost:8000',
+    GGM_API: '',
 
     // Auth API 地址
-    AUTH_API: 'http://localhost:8001',
+    AUTH_API: '',
 
     // Monitor API 地址
-    MONITOR_API: 'http://localhost:3001',
+    MONITOR_API: '',
 
     // 免邀请码注册的邮箱后缀列表
     ALLOWED_EMAIL_DOMAINS: ["@mail.imggb.top"],

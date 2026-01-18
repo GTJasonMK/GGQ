@@ -20,8 +20,8 @@ services:
       - ./backend/GGM/credient.txt:/app/GGM/credient.txt
     environment:
       - TZ=Asia/Shanghai
-      # 使用 Docker 网桥 IP，安全且稳定
-      - GEMINI_PROXY=socks5h://172.17.0.1:1080
+      # 使用 host.docker.internal 自动解析宿主机网关 IP
+      - GEMINI_PROXY=socks5h://host.docker.internal:1080
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command: python -u GGM/run.py

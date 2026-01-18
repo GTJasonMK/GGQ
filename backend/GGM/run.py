@@ -19,6 +19,7 @@ import socket
 import subprocess
 import argparse
 import time
+import importlib.util
 from pathlib import Path
 from typing import List, Tuple, Optional
 
@@ -33,12 +34,16 @@ CONFIG_FILE = project_root / "config.json"
 def get_port_from_config() -> int:
     """从配置文件读取端口，支持环境变量覆盖"""
     # 环境变量优先
-    env_port = os.environ.get("GEMINI_PORT")
+    env_port = os.environ.get("GGM_PORT") or os.environ.get("GEMINI_PORT")
     if env_port:
         try:
             return int(env_port)
         except ValueError:
             pass
+
+    unified_port = get_port_from_unified_config()
+    if unified_port is not None:
+        return unified_port
 
     # 读取配置文件
     if CONFIG_FILE.exists():
@@ -50,6 +55,24 @@ def get_port_from_config() -> int:
             pass
 
     return 8000
+
+
+def get_port_from_unified_config() -> Optional[int]:
+    """从统一配置读取端口"""
+    config_path = project_root.parent / "config.py"
+    if not config_path.exists():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("unified_config", config_path)
+        if not spec or not spec.loader:
+            return None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        if hasattr(module, "GGM_PORT"):
+            return int(getattr(module, "GGM_PORT"))
+    except Exception:
+        return None
+    return None
 
 
 def is_port_in_use(port: int, host: str = "0.0.0.0") -> bool:

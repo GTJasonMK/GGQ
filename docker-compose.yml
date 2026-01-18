@@ -15,16 +15,14 @@ services:
       - ggm_data:/app/GGM/data
       # 配置文件（可选，也可以直接修改镜像内的 config.py）
       - ./backend/config.py:/app/config.py:ro
-      - ./backend/GGM/config.json:/app/GGM/config.json
-      # 凭证文件
-      - ./backend/GGM/credient.txt:/app/GGM/credient.txt
+      - ./backend/GGM:/app/GGM
     environment:
       - TZ=Asia/Shanghai
       # 使用 host.docker.internal 自动解析宿主机网关 IP
       - GEMINI_PROXY=socks5h://host.docker.internal:1080
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    command: python -u GGM/run.py
+    command: python -u GGM/run.py --no-clear
     networks:
       - webdev-network
     # 2G 服务器内存限制（需要运行 Playwright 浏览器，增加内存）
@@ -35,7 +33,7 @@ services:
         reservations:
           memory: 256M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request, sys; r=urllib.request.urlopen('http://localhost:8000/health', timeout=5); sys.exit(0 if r.status == 200 else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -66,7 +64,7 @@ services:
         reservations:
           memory: 64M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      test: ["CMD", "python", "-c", "import urllib.request, sys; r=urllib.request.urlopen('http://localhost:8001/health', timeout=5); sys.exit(0 if r.status == 200 else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -4,20 +4,35 @@
 - 获取用户信息
 """
 import os
+import sys
 import logging
 from typing import Optional
 from dataclasses import dataclass
+from pathlib import Path
 
 from fastapi import HTTPException, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
+
+# 读取统一配置（与 auth 服务保持一致）
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent.parent
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
+try:
+    import config as unified_config
+except ImportError:
+    unified_config = None
 
 logger = logging.getLogger(__name__)
 
 # JWT 配置（与 auth 服务保持一致）
 # 开发环境默认密钥，生产环境必须通过环境变量 AUTH_JWT_SECRET 设置
 _DEFAULT_JWT_SECRET = "dev_jwt_secret_key_for_local_development_only_change_in_production"
-AUTH_JWT_SECRET = os.getenv("AUTH_JWT_SECRET", _DEFAULT_JWT_SECRET)
+if unified_config and hasattr(unified_config, "AUTH_JWT_SECRET"):
+    AUTH_JWT_SECRET = unified_config.AUTH_JWT_SECRET
+else:
+    AUTH_JWT_SECRET = os.getenv("AUTH_JWT_SECRET", _DEFAULT_JWT_SECRET)
 AUTH_JWT_ALGORITHM = "HS256"
 
 security = HTTPBearer(auto_error=False)

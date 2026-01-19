@@ -279,13 +279,9 @@
             redirectToTarget();
         }
 
-        function getRedirectUrl() {
-            const params = new URLSearchParams(window.location.search);
-            return params.get('redirect') || '../index.html';
-        }
-
         function redirectToTarget() {
-            window.location.href = getRedirectUrl();
+            // 统一登录后回到入口页，避免直接进入管理页面
+            window.location.href = '../index.html';
         }
 
         function showError(msg) {

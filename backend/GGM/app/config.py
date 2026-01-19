@@ -103,6 +103,10 @@ class AppConfig(BaseModel):
     # 认证设置
     admin_password: str = Field("admin123", description="管理员密码")
     admin_secret_key: str = Field("", description="管理员密钥")
+    admin_password_login_enabled: bool = Field(
+        False,
+        description="是否允许使用管理员密码登录（建议关闭以统一认证）"
+    )
     api_tokens: List[str] = Field(default_factory=list, description="API访问令牌")
 
     # 账号列表
@@ -190,6 +194,10 @@ class ConfigManager:
                 self._config.admin_password = unified_config.GGM_ADMIN_PASSWORD
             if hasattr(unified_config, 'GGM_ADMIN_SECRET_KEY'):
                 self._config.admin_secret_key = unified_config.GGM_ADMIN_SECRET_KEY
+            if hasattr(unified_config, 'GGM_ADMIN_PASSWORD_LOGIN_ENABLED'):
+                self._config.admin_password_login_enabled = (
+                    unified_config.GGM_ADMIN_PASSWORD_LOGIN_ENABLED
+                )
             if hasattr(unified_config, 'GGM_API_TOKENS'):
                 self._config.api_tokens = unified_config.GGM_API_TOKENS
             if hasattr(unified_config, 'GGM_PROXY'):

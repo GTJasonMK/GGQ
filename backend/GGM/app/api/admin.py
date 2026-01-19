@@ -65,6 +65,8 @@ async def admin_login(request: LoginRequest):
     验证密码并返回管理员Token
     """
     config = config_manager.config
+    if not config.admin_password_login_enabled:
+        raise HTTPException(status_code=403, detail="已禁用管理员密码登录，请使用统一认证登录")
 
     # 验证密码
     if request.password != config.admin_password:

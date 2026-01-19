@@ -25,6 +25,9 @@ GGM_ADMIN_PASSWORD = "your_admin_password_here"
 # 管理员密钥（用于生成管理员Token，必须是随机字符串）
 GGM_ADMIN_SECRET_KEY = "your_random_secret_key_at_least_32_chars"
 
+# 管理员密码登录开关（建议关闭以统一认证）
+GGM_ADMIN_PASSWORD_LOGIN_ENABLED = False
+
 # 静态 API Token 列表（用于外部API调用）
 GGM_API_TOKENS = ["your_api_token_here"]
 

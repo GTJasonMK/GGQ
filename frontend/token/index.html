@@ -588,6 +588,15 @@ for chunk in stream:
 
         document.addEventListener('DOMContentLoaded', applyLanguage);
 
+        async function parseJsonResponse(res) {
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                return await res.json();
+            }
+            const text = await res.text();
+            throw new Error(text || `Request failed: ${res.status}`);
+        }
+
         async function loadData() {
             const authToken = AuthClient.getAccessToken();
             try {
@@ -595,7 +604,10 @@ for chunk in stream:
                 const tokenRes = await fetch(`${GGM_API}/api/token-requests/my-token`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                const tokenData = await tokenRes.json();
+                const tokenData = await parseJsonResponse(tokenRes);
+                if (!tokenRes.ok) {
+                    throw new Error(tokenData.detail || 'Failed to load token');
+                }
 
                 if (tokenData.has_token) {
                     currentToken = tokenData.token;
@@ -614,7 +626,10 @@ for chunk in stream:
                 const reqRes = await fetch(`${GGM_API}/api/token-requests/my`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                const reqData = await reqRes.json();
+                const reqData = await parseJsonResponse(reqRes);
+                if (!reqRes.ok) {
+                    throw new Error(reqData.detail || 'Failed to load requests');
+                }
                 renderRequests(reqData.requests || []);
 
                 // 检查是否有pending的申请，更新提示文字
@@ -670,7 +685,7 @@ for chunk in stream:
                     body: JSON.stringify({ reason, username: user?.username || '' })
                 });
 
-                const data = await res.json();
+                const data = await parseJsonResponse(res);
                 if (res.ok) {
                     showAlert('Application submitted successfully!', 'success');
                     document.getElementById('reasonInput').value = '';

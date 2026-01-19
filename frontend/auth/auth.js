@@ -5,7 +5,15 @@
 const AuthClient = {
     // API 基础地址（从全局配置读取，空字符串表示使用相对路径）
     get API_BASE() {
-        return window.APP_CONFIG ? window.APP_CONFIG.getAuthApi() : 'http://localhost:8001';
+        if (window.APP_CONFIG) {
+            return window.APP_CONFIG.getAuthApi();
+        }
+        // 未加载配置时：本地开发走 localhost，生产环境走相对路径
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') {
+            return 'http://localhost:8001';
+        }
+        return '';
     },
 
     // 存储键名

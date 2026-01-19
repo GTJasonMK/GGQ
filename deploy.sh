@@ -55,10 +55,9 @@ fi
 
 cd "$APP_DIR"
 
-if [ -d backend/GGM/credient.txt ]; then
-  rm -rf backend/GGM/credient.txt
+if [ ! -f backend/GGM/credient.txt ]; then
+  touch backend/GGM/credient.txt
 fi
-touch backend/GGM/credient.txt
 
 if grep -q "GEMINI_PROXY=" docker-compose.yml; then
   sed -i "s|GEMINI_PROXY=.*|GEMINI_PROXY=socks5h://${HOST_GATEWAY_IP}:${PROXY_PORT}|g" docker-compose.yml

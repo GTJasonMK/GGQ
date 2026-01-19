@@ -364,6 +364,11 @@ const AuthClient = {
             return false;
         }
 
+        const cachedUser = this.getUser();
+        if (cachedUser) {
+            return true;
+        }
+
         try {
             await this.getMe();
             return true;

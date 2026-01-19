@@ -1036,16 +1036,23 @@
 
             // 验证token有效性并检查权限
             try {
-                const user = await AuthClient.getMe();
-                // 检查是否为管理员 (role: 0=超级管理员, 1=管理员)
-                if (user.role > 1) {
-                    alert(I18n.t('common', 'error') + ': ' + I18n.t('portal', 'adminOnly'));
-                    window.location.href = '../index.html';
-                    return;
+                const cachedUser = AuthClient.getUser();
+                if (cachedUser) {
+                    if (cachedUser.role > 1) {
+                        alert(I18n.t('common', 'error') + ': ' + I18n.t('portal', 'adminOnly'));
+                        window.location.href = '../index.html';
+                        return;
+                    }
+                } else {
+                    const user = await AuthClient.getMe();
+                    // 检查是否为管理员 (role: 0=超级管理员, 1=管理员)
+                    if (user.role > 1) {
+                        alert(I18n.t('common', 'error') + ': ' + I18n.t('portal', 'adminOnly'));
+                        window.location.href = '../index.html';
+                        return;
+                    }
                 }
             } catch (e) {
-                // 验证失败，清除token后重定向到登录页面
-                AuthClient.clearTokens();
                 AuthClient.redirectToLogin();
                 return;
             }

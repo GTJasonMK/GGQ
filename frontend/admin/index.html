@@ -219,6 +219,15 @@
                 AuthClient.redirectToLogin();
                 return;
             }
+            const cachedUser = AuthClient.getUser();
+            if (cachedUser) {
+                if (cachedUser.role > 1) {
+                    alert('Admin access required');
+                    window.location.href = '../index.html';
+                    return;
+                }
+                return;
+            }
             try {
                 const user = await AuthClient.getMe();
                 if (user.role > 1) {
@@ -226,8 +235,6 @@
                     window.location.href = '../index.html';
                 }
             } catch (e) {
-                // 验证失败，清除token后重定向到登录页面
-                AuthClient.clearTokens();
                 AuthClient.redirectToLogin();
             }
         })();

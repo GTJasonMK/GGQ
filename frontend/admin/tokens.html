@@ -240,6 +240,15 @@
             };
         }
 
+        async function parseJsonResponse(res) {
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                return await res.json();
+            }
+            const text = await res.text();
+            throw new Error(text || `Request failed: ${res.status}`);
+        }
+
         async function loadRequests(status) {
             document.querySelectorAll('.tab').forEach((t, i) => {
                 t.classList.toggle('active', (status === 'pending' && i === 0) || (status === null && i === 1));
@@ -253,7 +262,10 @@
                 const res = await fetch(url, {
                     headers: getAuthHeaders()
                 });
-                const data = await res.json();
+                const data = await parseJsonResponse(res);
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Failed to load requests');
+                }
                 renderRequests(data.requests || []);
             } catch (e) {
                 document.getElementById('requestList').innerHTML =
@@ -303,7 +315,7 @@
                 if (res.ok) {
                     loadRequests('pending');
                 } else {
-                    const data = await res.json();
+                    const data = await parseJsonResponse(res);
                     alert(data.detail || 'Failed');
                 }
             } catch (e) {
@@ -322,7 +334,7 @@
                 if (res.ok) {
                     loadRequests('pending');
                 } else {
-                    const data = await res.json();
+                    const data = await parseJsonResponse(res);
                     alert(data.detail || 'Failed');
                 }
             } catch (e) {

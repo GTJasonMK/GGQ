@@ -1,0 +1,19 @@
+{
+  "question": "Where to detect empty responses and how to trigger account replacement?",
+  "why": "Empty responses currently do not trigger account cooldown or replacement, causing repeated failures.",
+  "evidence": [
+    {
+      "source": "backend/GGM/app/api/chat.py",
+      "summary": "Empty responses are checked after chat_service returns and only raise AccountRequestError."
+    },
+    {
+      "source": "backend/GGM/app/services/chat_service.py",
+      "summary": "Image-generation failures already trigger account replacement; chat_service has access to account and conversation."
+    },
+    {
+      "source": "backend/GGM/app/services/account_replacement_service.py",
+      "summary": "replace_failed_account deletes the failed account and registers a new one."
+    }
+  ],
+  "decision": "Add empty-response detection inside chat_service to trigger replacement and retry once with another account before raising AccountRequestError."
+}

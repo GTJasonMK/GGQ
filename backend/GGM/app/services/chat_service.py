@@ -71,6 +71,75 @@ class ChatService:
     def __init__(self):
         self._lock = asyncio.Lock()
 
+    def _is_empty_result(self, result: ChatResult) -> bool:
+        """判断是否为空响应（无文本且无图片）"""
+        text = (result.text or "").strip()
+        return not text and not result.images
+
+    async def _retry_with_fallback_account(
+        self,
+        conversation: Conversation,
+        failed_account: Account,
+        message: str,
+        file_ids: List[str],
+        model: str,
+        system_prompt: str,
+        history_messages: List[dict]
+    ) -> Optional[tuple[Account, ChatResult]]:
+        """空响应后切换账号重试一次"""
+        fallback_account = account_manager.get_freshest_available_account(
+            exclude_index=failed_account.index
+        )
+        if not fallback_account:
+            return None
+
+        logger.info(
+            f"空响应后切换账号重试: from={failed_account.index} to={fallback_account.index}, "
+            f"conv_id={conversation.id}"
+        )
+
+        # 切换会话绑定账号，清空旧 session
+        await conversation_manager.update_binding_account(
+            conversation.id,
+            fallback_account.index
+        )
+
+        jwt = await jwt_service.ensure_jwt(fallback_account)
+        session_name = await self.ensure_gemini_session(conversation, fallback_account, jwt)
+
+        # 文件可能属于旧 session，先尝试原 file_ids，失败后清空重试
+        try:
+            result = await self._send_message(
+                jwt=jwt,
+                session_name=session_name,
+                team_id=fallback_account.team_id,
+                message=message,
+                file_ids=file_ids or [],
+                conversation=conversation,
+                model=model,
+                system_prompt=system_prompt,
+                history_messages=history_messages
+            )
+        except AccountRequestError as e:
+            if "FILE_NOT_FOUND" in str(e):
+                logger.warning("重试命中文件不存在，清空文件列表再次发送")
+                result = await self._send_message(
+                    jwt=jwt,
+                    session_name=session_name,
+                    team_id=fallback_account.team_id,
+                    message=message,
+                    file_ids=[],
+                    conversation=conversation,
+                    model=model,
+                    system_prompt=system_prompt,
+                    history_messages=history_messages
+                )
+            else:
+                raise
+
+        result.retry_notice = "检测到空响应，已自动切换账号重试"
+        return fallback_account, result
+
     def _build_full_message(
         self,
         message: str,
@@ -294,6 +363,55 @@ class ChatService:
                     system_prompt=system_prompt,
                     history_messages=history_messages
                 )
+
+                # 检查空响应，触发账号替换并重试
+                if self._is_empty_result(result):
+                    failed_account = account
+                    account_note = failed_account.note or f"账号{failed_account.index}"
+                    logger.warning(
+                        f"检测到空响应，触发账号替换: account={account_note}, conv_id={conversation.id}"
+                    )
+                    try:
+                        from app.services.account_pool_service import account_pool_service
+                        account_pool_service.record_error(account_note)
+                    except Exception:
+                        pass
+                    asyncio.create_task(self._handle_empty_response(failed_account, conversation.id))
+
+                    retry_result = await self._retry_with_fallback_account(
+                        conversation=conversation,
+                        failed_account=failed_account,
+                        message=message,
+                        file_ids=file_ids or [],
+                        model=model,
+                        system_prompt=system_prompt,
+                        history_messages=history_messages
+                    )
+                    if retry_result:
+                        account, result = retry_result
+                        if self._is_empty_result(result):
+                            retry_note = account.note or f"账号{account.index}"
+                            logger.warning(
+                                f"重试仍为空响应，触发账号替换: account={retry_note}, conv_id={conversation.id}"
+                            )
+                            try:
+                                from app.services.account_pool_service import account_pool_service
+                                account_pool_service.record_error(retry_note)
+                            except Exception:
+                                pass
+                            asyncio.create_task(self._handle_empty_response(account, conversation.id))
+                            raise AccountRequestError("服务返回空响应，自动重试失败，请重试")
+
+                        try:
+                            from app.services.account_pool_service import account_pool_service
+                            account_pool_service.clear_error(account.note or f"账号{account.index}")
+                        except Exception:
+                            pass
+
+                        request_success = True
+                        return result
+
+                    raise AccountRequestError("服务返回空响应，暂无可用账号重试")
 
                 # 检测图片生成失败，触发账号替换
                 if result.image_generation_failed:
@@ -817,6 +935,29 @@ class ChatService:
 
         except Exception as e:
             logger.error(f"处理图片生成失败时出错: {e}")
+            import traceback
+            traceback.print_exc()
+
+    async def _handle_empty_response(self, account: Account, conversation_id: str):
+        """
+        处理空响应，触发账号替换
+
+        在后台异步执行账号替换，不阻塞当前请求
+        """
+        try:
+            from app.services.account_replacement_service import account_replacement_service
+
+            success, message = await account_replacement_service.replace_failed_account(
+                failed_account_index=account.index
+            )
+
+            if success:
+                logger.info(f"空响应账号替换成功: conv_id={conversation_id}, {message}")
+            else:
+                logger.warning(f"空响应账号替换失败: conv_id={conversation_id}, {message}")
+
+        except Exception as e:
+            logger.error(f"处理空响应替换时出错: conv_id={conversation_id}, {e}")
             import traceback
             traceback.print_exc()
 

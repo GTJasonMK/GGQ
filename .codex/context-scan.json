@@ -1,0 +1,31 @@
+{
+  "locations": [
+    "backend/GGM/app/services/chat_service.py",
+    "backend/GGM/app/api/chat.py",
+    "backend/GGM/app/services/account_replacement_service.py",
+    "backend/GGM/app/services/account_pool_service.py"
+  ],
+  "current_state": {
+    "empty_response_handling": "chat_service detects empty responses and triggers account replacement; retry on another account to be added.",
+    "replacement_flow": "chat_service triggers account replacement for image generation failures; account_pool_service can delete after consecutive errors."
+  },
+  "similar_cases": [
+    "chat_service._handle_image_generation_failure triggers account replacement",
+    "account_pool_service health check deletes accounts after error thresholds"
+  ],
+  "tech_stack": [
+    "FastAPI",
+    "Python 3",
+    "asyncio/httpx"
+  ],
+  "tests": {
+    "framework": "none configured",
+    "existing_tests": "no GGM tests found"
+  },
+  "observations": [
+    "Empty response detection is centralized in chat_service so replacement can be triggered.",
+    "A retry on another available account can reuse existing account selection utilities.",
+    "Retry notice can be attached to ChatResult and rendered in API response.",
+    "Account replacement already exists and can be reused for empty responses."
+  ]
+}

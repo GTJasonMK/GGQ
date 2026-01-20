@@ -1,0 +1,22 @@
+{
+  "summary": "When a chat response is empty, delete the failing account, create a new account, and retry the user request on another available account.",
+  "background": "Users see empty responses during chat; they want automatic account replacement to keep the pool healthy.",
+  "scope": [
+    "Detect empty chat responses across streaming and non-streaming flows.",
+    "Trigger account replacement using existing replacement services.",
+    "Retry the request on a different available account once.",
+    "Expose a retry notice to the client when retry happens.",
+    "Keep error reporting consistent for the client."
+  ],
+  "out_of_scope": [
+    "Changing external proxy/network behavior.",
+    "Refactoring the account pool health checker."
+  ],
+  "acceptance": [
+    "Empty responses are detected centrally in chat handling.",
+    "The failing account is replaced via the existing replacement service.",
+    "A retry on another account is attempted once.",
+    "Successful retries include a visible notice in the response.",
+    "Client receives a consistent error message for empty responses."
+  ]
+}

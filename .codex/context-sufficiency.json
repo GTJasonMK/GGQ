@@ -1,0 +1,25 @@
+{
+  "checklist": [
+    {
+      "item": "Can define clear interface contract",
+      "status": "yes",
+      "notes": "Empty response detection will retry once, then raise AccountRequestError and trigger replacement."
+    },
+    {
+      "item": "Understand key technical choices",
+      "status": "yes",
+      "notes": "Reuse account_replacement_service and centralize detection in chat_service."
+    },
+    {
+      "item": "Identify main risks",
+      "status": "yes",
+      "notes": "False positives may delete accounts; logs will capture failures."
+    },
+    {
+      "item": "Know how to validate",
+      "status": "yes",
+      "notes": "Run local smoke check or unit tests if available."
+    }
+  ],
+  "decision": "sufficient"
+}

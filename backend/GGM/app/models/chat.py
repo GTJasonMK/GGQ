@@ -122,6 +122,8 @@ class ChatResult(BaseModel):
     # 图片生成失败标志
     image_generation_failed: bool = False
     image_generation_error: Optional[str] = None
+    # 自动重试提示
+    retry_notice: Optional[str] = None
 
 
 def estimate_tokens(text: str) -> int:

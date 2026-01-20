@@ -303,11 +303,6 @@ async def chat_completions(
                 history_messages=history_messages
             )
 
-            # 检查空响应
-            if not result.text and not result.images:
-                logger.warning(f"收到空响应: conv_id={conversation.id}")
-                raise AccountRequestError("服务返回空响应，请重试")
-
             # 检查图片生成失败
             if hasattr(result, 'image_generation_failed') and result.image_generation_failed:
                 logger.warning(f"图片生成失败: conv_id={conversation.id}, error={getattr(result, 'image_generation_error', '')}")
@@ -317,6 +312,13 @@ async def chat_completions(
                     result.text = warning_msg + result.text
                 else:
                     result.text = warning_msg + "请尝试更换描述或稍后重试"
+
+            if getattr(result, "retry_notice", None):
+                notice = result.retry_notice
+                if result.text:
+                    result.text = f"[提示] {notice}\n\n{result.text}"
+                else:
+                    result.text = f"[提示] {notice}"
 
             # 先保存生成的图片
             image_urls = []
@@ -506,18 +508,6 @@ async def stream_chat_response(
             yield f"data: {json.dumps(error_chunk)}\n\n"
             return
 
-        # 检查空响应（text和images都为空）
-        if not result.text and not result.images:
-            logger.warning(f"流式响应收到空内容: conv_id={conversation.id}")
-            error_chunk = {
-                "error": {
-                    "message": "服务返回空响应，请重试",
-                    "type": "server_error"
-                }
-            }
-            yield f"data: {json.dumps(error_chunk)}\n\n"
-            return
-
         # 检查图片生成失败
         if hasattr(result, 'image_generation_failed') and result.image_generation_failed:
             logger.warning(f"流式响应图片生成失败: conv_id={conversation.id}")
@@ -526,6 +516,13 @@ async def stream_chat_response(
                 result.text = warning_msg + result.text
             else:
                 result.text = warning_msg + "请尝试更换描述或稍后重试"
+
+        if getattr(result, "retry_notice", None):
+            notice = result.retry_notice
+            if result.text:
+                result.text = f"[提示] {notice}\n\n{result.text}"
+            else:
+                result.text = f"[提示] {notice}"
 
         # 先保存所有图片（在记录消息和流式输出之前）
         # 确保即使客户端断开，图片也已保存

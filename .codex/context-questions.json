@@ -1,0 +1,24 @@
+{
+  "questions": [
+    {
+      "priority": "high",
+      "question": "Where should empty-response detection live to cover streaming and non-streaming flows and still allow account replacement?"
+    },
+    {
+      "priority": "high",
+      "question": "What existing replacement flow should be reused for deleting and re-creating accounts?"
+    },
+    {
+      "priority": "medium",
+      "question": "What is the precise definition of an empty response (blank text, whitespace, no images)?"
+    },
+    {
+      "priority": "medium",
+      "question": "Should empty responses also update account error counters/cooldowns?"
+    },
+    {
+      "priority": "low",
+      "question": "What minimal verification can be run locally to validate the change?"
+    }
+  ]
+}
